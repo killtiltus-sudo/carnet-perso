@@ -1,0 +1,5 @@
+# Ne JAMAIS publier de données personnelles ou de santé
+donnees_medicales.json
+*.ics
+sauvegarde-mes-soins-*.json
+prive/

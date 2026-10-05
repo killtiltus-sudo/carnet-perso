@@ -1,0 +1,1499 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Confidentialité : aucune ressource externe, aucune connexion sortante (seule la lecture du fichier local donnees_medicales.json est permise). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mes soins">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icones/icone-192.png">
+<meta name="theme-color" content="#1f5f8b">
+<title>Mes soins</title>
+<style>
+:root {
+  --bg: #f4f6f9; --surface: #ffffff; --surface-2: #eaeff5; --texte: #18212c; --texte-2: #4a5666; --bord: #cfd7e1;
+  --primaire: #1f5f8b; --primaire-texte: #ffffff; --focus: #d97706;
+  --ok: #17663a; --ok-fond: #e1f3e8; --alerte: #8a4b00; --alerte-fond: #fff1d6;
+  --danger: #a61b12; --danger-fond: #fde7e4; --demo: #7d1670; --demo-fond: #fbe4f7;
+  --t-consultation: #2b6cb0; --t-prise_de_sang: #c0392b; --t-chimiotherapie: #6b46c1; --t-immunotherapie: #2f855a;
+  --t-radiotherapie: #b7791f; --t-imagerie: #2c7a7b; --t-autre: #5a6678;
+  --rayon: 12px; --ombre: 0 1px 2px rgba(0,0,0,.06), 0 2px 8px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #10151b; --surface: #19212a; --surface-2: #232d38; --texte: #e8edf3; --texte-2: #a9b4c1; --bord: #34414f;
+    --primaire: #6cb4e6; --primaire-texte: #0a1825; --focus: #fbbf24;
+    --ok: #6fd69a; --ok-fond: #143222; --alerte: #f4c76b; --alerte-fond: #3a2b0e;
+    --danger: #ff9b91; --danger-fond: #3d1613; --demo: #f6a5ea; --demo-fond: #3a1335;
+    --t-consultation: #63a4e8; --t-prise_de_sang: #f07b6e; --t-chimiotherapie: #a78bfa; --t-immunotherapie: #5fcf8e;
+    --t-radiotherapie: #f0b955; --t-imagerie: #4fd1c5; --t-autre: #a0aec0;
+    --ombre: none;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--texte);
+  font: 17px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  padding-bottom: calc(76px + env(safe-area-inset-bottom));
+}
+a { color: var(--primaire); }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.skip { position: absolute; left: -9999px; top: 0; background: var(--surface); padding: 8px 12px; z-index: 100; }
+.skip:focus { left: 8px; top: 8px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+[hidden] { display: none !important; }
+
+#bandeau-demo { background: var(--demo-fond); color: var(--demo); border-bottom: 2px solid var(--demo); padding: 8px 16px; font-weight: 700; text-align: center; font-size: 15px; }
+#bandeau-erreur { background: var(--danger-fond); color: var(--danger); border-bottom: 2px solid var(--danger); padding: 8px 16px; font-weight: 600; font-size: 15px; }
+header.app { padding: 12px 16px 4px; max-width: 760px; margin: 0 auto; }
+header.app .nom-app { font-weight: 700; font-size: 15px; color: var(--texte-2); text-transform: uppercase; letter-spacing: .05em; }
+
+main { max-width: 760px; margin: 0 auto; padding: 0 16px 24px; overflow-wrap: break-word; }
+main:focus { outline: none; }
+h1 { font-size: 26px; line-height: 1.2; margin: 8px 0 12px; }
+h2 { font-size: 19px; margin: 24px 0 8px; }
+h3 { font-size: 17px; margin: 0 0 4px; }
+p { margin: 0 0 10px; }
+.sous-titre { color: var(--texte-2); margin-top: -6px; }
+
+.carte { background: var(--surface); border: 1px solid var(--bord); border-radius: var(--rayon); padding: 14px 16px; margin: 0 0 12px; box-shadow: var(--ombre); }
+.carte.vide { color: var(--texte-2); }
+.encadre { border-radius: var(--rayon); padding: 12px 14px; margin: 0 0 12px; border: 1px solid; }
+.encadre.info { background: var(--surface-2); border-color: var(--bord); }
+.encadre.alerte { background: var(--alerte-fond); border-color: var(--alerte); color: var(--texte); }
+.encadre.danger { background: var(--danger-fond); border-color: var(--danger); }
+.encadre.ok { background: var(--ok-fond); border-color: var(--ok); }
+.encadre > :last-child { margin-bottom: 0; }
+
+.meta { color: var(--texte-2); font-size: 15px; }
+.meta div { margin-top: 2px; }
+.source { color: var(--texte-2); font-size: 14px; margin-top: 6px; }
+.badge { display: inline-block; font-size: 13px; font-weight: 700; padding: 2px 8px; border-radius: 999px; vertical-align: middle; }
+.badge.ok { background: var(--ok-fond); color: var(--ok); }
+.badge.alerte { background: var(--alerte-fond); color: var(--alerte); border: 1px dashed var(--alerte); }
+.badge.compte { background: var(--danger); color: #fff; min-width: 20px; text-align: center; padding: 0 6px; font-size: 12px; line-height: 20px; }
+
+.type { display: inline-block; font-size: 13px; font-weight: 700; padding: 2px 8px 2px 6px; border-radius: 6px; background: var(--surface-2); border-left: 5px solid var(--tc, var(--t-autre)); margin-bottom: 4px; }
+.rdv.non-confirme { border-style: dashed; border-color: var(--alerte); }
+.rdv .quand { font-weight: 700; }
+.ligne-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
+button, .bouton {
+  font: inherit; font-size: 16px; min-height: 44px; padding: 8px 16px; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--primaire); background: var(--primaire); color: var(--primaire-texte); font-weight: 600;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none;
+}
+button.secondaire, .bouton.secondaire { background: transparent; color: var(--primaire); }
+button.danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button.petit { min-height: 36px; padding: 4px 12px; font-size: 15px; }
+input[type="text"], input[type="search"], input[type="date"], select {
+  font: inherit; font-size: 17px; min-height: 44px; padding: 8px 10px; border: 1px solid var(--bord); border-radius: 10px;
+  background: var(--surface); color: var(--texte); width: 100%;
+}
+label.champ { display: block; font-weight: 600; margin: 12px 0 4px; }
+fieldset { border: 1px solid var(--bord); border-radius: var(--rayon); padding: 8px 14px 14px; margin: 0 0 14px; background: var(--surface); }
+legend { font-weight: 700; padding: 0 6px; }
+.option { display: flex; align-items: center; gap: 10px; min-height: 40px; }
+.option input { width: 22px; height: 22px; flex: none; }
+
+/* Prises */
+.prises { list-style: none; padding: 0; margin: 0; }
+.prise { display: grid; grid-template-columns: 74px 1fr auto; gap: 10px; align-items: start; background: var(--surface); border: 1px solid var(--bord); border-radius: var(--rayon); padding: 12px; margin-bottom: 10px; }
+.prise.prise-cochee { border-color: var(--ok); background: var(--ok-fond); }
+.prise .heure { font-weight: 800; font-size: 18px; white-space: nowrap; }
+.prise .nom { font-weight: 700; }
+.prise .dose { margin-top: 2px; }
+.case-pris { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 14px; font-weight: 700; cursor: pointer; min-width: 52px; }
+.case-pris input { width: 30px; height: 30px; margin: 0; accent-color: var(--ok); cursor: pointer; }
+.case-pris input:disabled { cursor: not-allowed; }
+.etat-prise { font-size: 14px; color: var(--ok); font-weight: 600; margin-top: 4px; }
+.progression { font-weight: 600; color: var(--texte-2); }
+
+/* Navigation date */
+.nav-date { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.nav-date input { flex: 1; }
+.nav-date button { flex: none; min-width: 44px; padding: 8px 12px; }
+
+/* Calendrier */
+.entete-mois { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.entete-mois h2 { margin: 0; text-transform: capitalize; font-size: 20px; }
+table.mois { width: 100%; border-collapse: separate; border-spacing: 3px; table-layout: fixed; }
+table.mois th { font-size: 13px; color: var(--texte-2); font-weight: 600; padding: 2px 0; }
+table.mois td { padding: 0; height: 54px; vertical-align: top; }
+.jour { width: 100%; height: 100%; min-height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 3px;
+  padding: 4px 2px; border-radius: 8px; border: 1px solid var(--bord); background: var(--surface); color: var(--texte); font-weight: 600; font-size: 15px; }
+.jour.aujourdhui { border: 2px solid var(--primaire); }
+.jour.selectionne { background: var(--primaire); color: var(--primaire-texte); border-color: var(--primaire); }
+.jour .points { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; }
+.jour .point { width: 8px; height: 8px; border-radius: 50%; background: var(--tc); }
+.jour .point.non-confirme { background: transparent; border: 2px dashed var(--tc); }
+.jour.selectionne .point { outline: 1px solid var(--primaire-texte); }
+.filtres { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.filtre { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--bord); background: var(--surface); font-size: 14px; cursor: pointer; min-height: 38px; }
+.filtre input { width: 18px; height: 18px; margin: 0; }
+.filtre .pastille { width: 12px; height: 12px; border-radius: 50%; background: var(--tc); }
+
+/* Symptômes */
+.consigne .texte-consigne { font-size: 17px; margin: 6px 0 10px; padding-left: 10px; border-left: 4px solid var(--primaire); }
+dl.details { margin: 0; }
+dl.details dt { font-weight: 700; color: var(--texte-2); font-size: 14px; margin-top: 8px; }
+dl.details dt:first-child { margin-top: 0; }
+dl.details dd { margin: 0; overflow-wrap: anywhere; }
+.message-aucune { font-size: 18px; font-weight: 700; }
+
+/* À confirmer */
+.non-valide { background: var(--alerte-fond); border: 1px dashed var(--alerte); border-radius: 8px; padding: 8px 10px; margin-top: 8px; font-size: 15px; }
+.non-valide summary { cursor: pointer; font-weight: 700; color: var(--alerte); min-height: 32px; }
+.raisons { margin: 6px 0 0; padding-left: 20px; }
+.raisons li { margin-bottom: 2px; }
+
+/* Plus */
+.liste-liens { list-style: none; padding: 0; margin: 0; }
+.liste-liens a { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--bord); border-radius: var(--rayon); margin-bottom: 8px; text-decoration: none; color: var(--texte); font-weight: 600; min-height: 52px; }
+.liste-liens .desc { display: block; font-weight: 400; font-size: 14px; color: var(--texte-2); }
+
+/* Navigation */
+nav.principale { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--bord); padding-bottom: env(safe-area-inset-bottom); z-index: 20; }
+nav.principale ul { list-style: none; margin: 0 auto; padding: 0; display: flex; max-width: 760px; }
+nav.principale li { flex: 1; }
+nav.principale li.secondaire { display: none; }
+nav.principale a { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 2px 6px; font-size: 12px; font-weight: 600; color: var(--texte-2); text-decoration: none; min-height: 60px; position: relative; }
+nav.principale a[aria-current="page"] { color: var(--primaire); }
+nav.principale a[aria-current="page"]::before { content: ""; position: absolute; top: 0; left: 20%; right: 20%; height: 3px; border-radius: 0 0 3px 3px; background: var(--primaire); }
+nav.principale svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+nav.principale .badge.compte { position: absolute; top: 4px; left: 55%; }
+
+@media (min-width: 960px) {
+  body { padding-bottom: 0; padding-left: 230px; }
+  nav.principale { top: 0; right: auto; width: 230px; border-top: 0; border-right: 1px solid var(--bord); padding-top: 64px; }
+  nav.principale ul { flex-direction: column; padding: 0 10px; }
+  nav.principale li.secondaire { display: block; }
+  nav.principale li.plus { display: none; }
+  nav.principale a { flex-direction: row; gap: 12px; font-size: 16px; min-height: 48px; padding: 10px 12px; border-radius: 10px; }
+  nav.principale a[aria-current="page"] { background: var(--surface-2); }
+  nav.principale a[aria-current="page"]::before { display: none; }
+  nav.principale .badge.compte { position: static; margin-left: auto; }
+}
+
+/* Rappels affichés dans l'application */
+#zone-rappels { position: fixed; left: 0; right: 0; top: 0; z-index: 50; display: flex; flex-direction: column; gap: 8px; padding: 8px 16px; pointer-events: none; }
+.rappel { pointer-events: auto; max-width: 720px; margin: 0 auto; width: 100%; background: var(--surface); border: 2px solid var(--primaire); border-radius: var(--rayon); padding: 12px 14px; box-shadow: 0 6px 24px rgba(0,0,0,.2); }
+.rappel strong { display: block; }
+#annonce { position: absolute; left: -9999px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .rappel { animation: entree .25s ease-out; }
+  @keyframes entree { from { transform: translateY(-12px); opacity: 0; } to { transform: none; opacity: 1; } }
+}
+@media print { nav.principale, #zone-rappels, .ligne-actions, button { display: none !important; } body { padding: 0; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#contenu">Aller au contenu</a>
+<div id="bandeau-demo" role="note" hidden>DONNÉES FICTIVES DE DÉMONSTRATION — ce ne sont pas tes rendez-vous ni tes traitements.</div>
+<div id="bandeau-erreur" role="alert" hidden></div>
+<div id="bandeau-stockage" class="encadre alerte" role="alert" hidden style="margin:0;border-radius:0">Le stockage local est indisponible dans ce navigateur (navigation privée ?). Tes coches et réglages ne seront pas conservés.</div>
+<header class="app"><span class="nom-app">Mes soins</span></header>
+
+<nav class="principale" aria-label="Navigation principale">
+  <ul>
+    <li><a href="#/accueil" data-route="accueil"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Accueil</a></li>
+    <li><a href="#/calendrier" data-route="calendrier"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendrier</a></li>
+    <li><a href="#/prises" data-route="prises"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="18" height="7" rx="3.5"/><path d="M12 9v7"/></svg>Prises</a></li>
+    <li><a href="#/symptomes" data-route="symptomes"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/></svg>Symptômes</a></li>
+    <li class="secondaire"><a href="#/historique" data-route="historique"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 3"/></svg>Historique</a></li>
+    <li class="secondaire"><a href="#/rappels" data-route="rappels"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"/></svg>Rappels</a></li>
+    <li class="secondaire"><a href="#/a-confirmer" data-route="a-confirmer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg>À confirmer <span class="badge compte" data-compte hidden></span></a></li>
+    <li class="secondaire"><a href="#/donnees" data-route="donnees"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Données</a></li>
+    <li class="plus"><a href="#/plus" data-route="plus"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>Plus <span class="badge compte" data-compte hidden></span></a></li>
+  </ul>
+</nav>
+
+<main id="contenu" tabindex="-1"></main>
+<div id="zone-rappels" aria-live="assertive"></div>
+<div id="annonce" aria-live="polite"></div>
+
+<script type="application/json" id="donnees-demo">{
+ "meta": {
+  "donnees_fictives": true,
+  "version_schema": 1,
+  "description": "DONNÉES FICTIVES DE DÉMONSTRATION. Aucune de ces informations ne correspond à un vrai traitement. Remplace-les par les informations validées de tes documents, puis passe « donnees_fictives » à false.",
+  "derniere_mise_a_jour": "2026-10-05"
+ },
+ "rendez_vous": [
+  {
+   "id": "rdv-demo-01",
+   "type": "chimiotherapie",
+   "titre": "Séance de chimiothérapie — cycle 1 (DÉMO)",
+   "date": "2026-09-17",
+   "heure": "08:30",
+   "duree_minutes": 360,
+   "lieu": "Hôpital Démo — hôpital de jour (fictif)",
+   "statut": "confirme",
+   "source": "Planning fictif de démonstration"
+  },
+  {
+   "id": "rdv-demo-02",
+   "type": "prise_de_sang",
+   "titre": "Prise de sang (DÉMO)",
+   "date": "2026-09-29",
+   "heure": "07:45",
+   "duree_minutes": 15,
+   "lieu": "Laboratoire Exemple (fictif)",
+   "statut": "confirme",
+   "source": "Ordonnance fictive de démonstration"
+  },
+  {
+   "id": "rdv-demo-03",
+   "type": "prise_de_sang",
+   "titre": "Prise de sang (DÉMO)",
+   "date": "2026-10-06",
+   "heure": "07:45",
+   "duree_minutes": 15,
+   "lieu": "Laboratoire Exemple (fictif)",
+   "notes": "Exemple de note fictive.",
+   "statut": "confirme",
+   "source": "Ordonnance fictive de démonstration"
+  },
+  {
+   "id": "rdv-demo-04",
+   "type": "consultation",
+   "titre": "Consultation d'hématologie (DÉMO)",
+   "date": "2026-10-07",
+   "heure": "10:30",
+   "duree_minutes": 30,
+   "lieu": "Hôpital Démo — bâtiment A (fictif)",
+   "professionnel": "Dr Exemple (fictif)",
+   "statut": "confirme",
+   "source": "Courrier fictif de démonstration"
+  },
+  {
+   "id": "rdv-demo-05",
+   "type": "chimiotherapie",
+   "titre": "Séance de chimiothérapie — cycle 2 (DÉMO)",
+   "date": "2026-10-08",
+   "heure": "08:30",
+   "duree_minutes": 360,
+   "lieu": "Hôpital Démo — hôpital de jour (fictif)",
+   "statut": "confirme",
+   "source": "Planning fictif de démonstration"
+  },
+  {
+   "id": "rdv-demo-06",
+   "type": "imagerie",
+   "titre": "Scanner de contrôle (DÉMO)",
+   "date": "2026-10-20",
+   "lieu": "Centre d'imagerie Exemple (fictif)",
+   "notes": "Exemple volontairement incomplet : marqué « confirme » mais sans heure, il est donc refusé par la validation.",
+   "statut": "confirme",
+   "source": "Courrier fictif de démonstration"
+  },
+  {
+   "id": "rdv-demo-07",
+   "type": "immunotherapie",
+   "titre": "Perfusion d'immunothérapie (DÉMO)",
+   "date": "2026-10-22",
+   "heure": "09:00",
+   "duree_minutes": 120,
+   "lieu": "Hôpital Démo — hôpital de jour (fictif)",
+   "statut": "confirme",
+   "source": "Planning fictif de démonstration"
+  },
+  {
+   "id": "rdv-demo-08",
+   "type": "consultation",
+   "titre": "Consultation infirmière (DÉMO)",
+   "date": "2026-10-29",
+   "heure": "14:00",
+   "lieu": "Hôpital Démo (fictif)",
+   "notes": "Exemple de rendez-vous à confirmer.",
+   "statut": "a_confirmer",
+   "source": "Appel téléphonique fictif"
+  },
+  {
+   "id": "rdv-demo-09",
+   "type": "prise_de_sang",
+   "titre": "Prise de sang (DÉMO)",
+   "date": "2026-11-03",
+   "heure": "07:45",
+   "duree_minutes": 15,
+   "lieu": "Laboratoire Exemple (fictif)",
+   "statut": "confirme",
+   "source": "Ordonnance fictive de démonstration"
+  },
+  {
+   "id": "rdv-demo-10",
+   "type": "chimiotherapie",
+   "titre": "Séance de chimiothérapie — cycle 3 (DÉMO)",
+   "date": "2026-11-05",
+   "heure": "08:30",
+   "duree_minutes": 360,
+   "lieu": "Hôpital Démo — hôpital de jour (fictif)",
+   "statut": "confirme",
+   "source": "Planning fictif de démonstration"
+  }
+ ],
+ "medicaments": [
+  {
+   "id": "med-demo-a",
+   "nom": "Médicament DÉMO A (fictif)",
+   "dose": "1 comprimé (exemple fictif)",
+   "voie": "orale",
+   "horaires": [
+    "08:00",
+    "20:00"
+   ],
+   "date_debut": "2026-09-17",
+   "date_fin": "2026-12-31",
+   "consignes_prise": "Exemple fictif : pendant le repas.",
+   "statut": "confirme",
+   "source": "Ordonnance fictive de démonstration"
+  },
+  {
+   "id": "med-demo-b",
+   "nom": "Médicament DÉMO B (fictif)",
+   "dose": "1 gélule (exemple fictif)",
+   "voie": "orale",
+   "horaires": [
+    "08:00"
+   ],
+   "jours": [
+    "lundi",
+    "mercredi",
+    "vendredi"
+   ],
+   "date_debut": "2026-09-17",
+   "date_fin": "2026-12-31",
+   "statut": "confirme",
+   "source": "Ordonnance fictive de démonstration"
+  },
+  {
+   "id": "med-demo-c",
+   "nom": "Médicament DÉMO C (fictif)",
+   "dose": "2 comprimés (exemple fictif)",
+   "voie": "orale",
+   "horaires": [
+    "12:00"
+   ],
+   "date_debut": "2026-10-08",
+   "date_fin": "2026-10-12",
+   "statut": "confirme",
+   "source": "Ordonnance fictive de démonstration"
+  },
+  {
+   "id": "med-demo-d",
+   "nom": "Médicament DÉMO D (fictif)",
+   "dose": "? (illisible sur l'ordonnance)",
+   "horaires": [
+    "21:00"
+   ],
+   "date_debut": "2026-09-17",
+   "date_fin": "2026-12-31",
+   "statut": "confirme",
+   "source": "Ordonnance fictive de démonstration",
+   "_explication": "Exemple volontairement incomplet : marqué « confirme », mais la dose contient « ? ». La validation le refuse et il n'apparaît pas dans les prises."
+  },
+  {
+   "id": "med-demo-e",
+   "nom": "Médicament DÉMO E (fictif)",
+   "dose": "1 sachet (exemple fictif)",
+   "horaires": [],
+   "date_debut": "2026-10-01",
+   "statut": "a_confirmer",
+   "source": "Échange fictif avec l'équipe"
+  }
+ ],
+ "consignes_symptomes": [
+  {
+   "id": "cs-demo-01",
+   "symptome": "Nausées",
+   "synonymes": [
+    "Envie de vomir",
+    "Nausée"
+   ],
+   "consigne": "Exemple fictif : texte de consigne recopié depuis la fiche de démonstration.",
+   "medicament": "Médicament DÉMO F (fictif)",
+   "posologie": "Texte de posologie fictif, recopié tel quel depuis la fiche",
+   "statut": "confirme",
+   "source": "Fiche fictive « Après la chimiothérapie » (démonstration)",
+   "date_document": "2026-09-17"
+  },
+  {
+   "id": "cs-demo-02",
+   "symptome": "Fièvre",
+   "synonymes": [
+    "Température"
+   ],
+   "consigne": "Exemple fictif : appeler le numéro indiqué sur la fiche de démonstration.",
+   "statut": "confirme",
+   "source": "Fiche fictive « Après la chimiothérapie » (démonstration)",
+   "date_document": "2026-09-17"
+  },
+  {
+   "id": "cs-demo-03",
+   "symptome": "Diarrhée",
+   "consigne": "Exemple fictif non validé.",
+   "medicament": "Médicament DÉMO G (fictif)",
+   "posologie": "à préciser",
+   "statut": "a_confirmer",
+   "source": "Note fictive prise pendant une consultation"
+  },
+  {
+   "id": "cs-demo-04",
+   "symptome": "Aphtes / bouche douloureuse",
+   "consigne": "Exemple fictif : utiliser le produit indiqué.",
+   "medicament": "Bain de bouche DÉMO (fictif)",
+   "statut": "confirme",
+   "source": "Fiche fictive « Après la chimiothérapie » (démonstration)",
+   "_explication": "Exemple volontairement incomplet : marqué « confirme », mais un médicament est indiqué sans posologie. La validation le refuse."
+  }
+ ],
+ "liste_symptomes": [
+  "Nausées",
+  "Fièvre",
+  "Diarrhée",
+  "Aphtes / bouche douloureuse",
+  "Fatigue",
+  "Constipation",
+  "Douleur"
+ ],
+ "contacts": [
+  {
+   "id": "ct-demo-01",
+   "nom": "Service d'hématologie — Hôpital Démo (fictif)",
+   "role": "Équipe soignante",
+   "telephone": "00 00 00 00 00",
+   "statut": "confirme",
+   "source": "Fiche fictive de démonstration"
+  },
+  {
+   "id": "ct-demo-02",
+   "nom": "Pharmacie Exemple (fictif)",
+   "role": "Pharmacien",
+   "telephone": "",
+   "statut": "confirme",
+   "source": "Fiche fictive de démonstration"
+  }
+ ]
+}</script>
+<script>
+'use strict';
+/* ============================================================
+   Mes soins — application locale de suivi.
+   Règles : aucune consigne médicale générée, aucune déduction,
+   aucune posologie calculée. Seules les données marquées
+   « confirme » ET complètes sont affichées comme consignes.
+   ============================================================ */
+
+// ---------- Constantes ----------
+const PREFIXE = 'mesSoins.v1.';
+const MESSAGE_AUCUNE_CONSIGNE = 'Aucune consigne confirmée dans les documents enregistrés. Contacte ton équipe soignante ou ton pharmacien.';
+const TYPES_RDV = {
+  consultation: 'Consultation',
+  prise_de_sang: 'Prise de sang',
+  chimiotherapie: 'Chimiothérapie',
+  immunotherapie: 'Immunothérapie',
+  radiotherapie: 'Radiothérapie',
+  imagerie: 'Imagerie',
+  autre: 'Autre rendez-vous'
+};
+const TYPES_TRAITEMENT = ['chimiotherapie', 'immunotherapie', 'radiotherapie'];
+const JOURS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+const JOURS_ICS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+const DELAIS_RDV = [
+  { min: 2880, label: '2 jours avant' }, { min: 1440, label: '1 jour avant' },
+  { min: 120, label: '2 heures avant' }, { min: 60, label: '1 heure avant' }, { min: 30, label: '30 minutes avant' }
+];
+const DELAIS_MED = [
+  { min: 0, label: 'À l’heure prévue' }, { min: 5, label: '5 minutes avant' },
+  { min: 10, label: '10 minutes avant' }, { min: 15, label: '15 minutes avant' }
+];
+const REGLAGES_DEFAUT = {
+  rdvActif: true, rdvDelais: [1440, 60],
+  medActif: true, medDelai: 0,
+  horizonJours: 30, masquerDetails: false,
+  rappelsAppli: true, notifNavigateur: false
+};
+
+// ---------- Stockage local (jamais transmis) ----------
+let stockageOK = true;
+const stock = {
+  lire(cle, defaut) {
+    try { const v = localStorage.getItem(PREFIXE + cle); return v === null ? defaut : JSON.parse(v); }
+    catch (e) { return defaut; }
+  },
+  ecrire(cle, valeur) {
+    try { localStorage.setItem(PREFIXE + cle, JSON.stringify(valeur)); return true; }
+    catch (e) { stockageOK = false; afficherBandeaux(); return false; }
+  },
+  supprimer(cle) { try { localStorage.removeItem(PREFIXE + cle); } catch (e) { /* rien */ } },
+  toutEffacer() {
+    try { Object.keys(localStorage).filter(k => k.startsWith(PREFIXE)).forEach(k => localStorage.removeItem(k)); }
+    catch (e) { /* rien */ }
+  }
+};
+try { localStorage.setItem(PREFIXE + 'test', '1'); localStorage.removeItem(PREFIXE + 'test'); }
+catch (e) { stockageOK = false; }
+
+// ---------- Utilitaires ----------
+const pad = n => String(n).padStart(2, '0');
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function dateVersIso(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+function isoVersDate(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+function ajouterJours(iso, n) { const d = isoVersDate(iso); d.setDate(d.getDate() + n); return dateVersIso(d); }
+function dateHeure(iso, hhmm) { const d = isoVersDate(iso); const [h, m] = hhmm.split(':').map(Number); d.setHours(h, m, 0, 0); return d; }
+function heureFr(hhmm) { const [h, m] = hhmm.split(':'); return `${Number(h)} h ${m}`; }
+function heureDe(d) { return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+const fmtLong = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+const fmtCourt = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+const fmtMois = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' });
+const fmtHorodatage = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+function jourLong(iso) { const s = fmtLong.format(isoVersDate(iso)); return s.charAt(0).toUpperCase() + s.slice(1); }
+function jourCourt(iso) { return fmtCourt.format(isoVersDate(iso)); }
+function normaliser(t) {
+  return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+}
+function annoncer(texte) { const a = document.getElementById('annonce'); a.textContent = ''; setTimeout(() => { a.textContent = texte; }, 50); }
+function telecharger(nomFichier, contenu, type) {
+  const blob = new Blob([contenu], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = nomFichier; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+// ---------- Validation des données ----------
+const RE_HEURE = /^([01]\d|2[0-3]):[0-5]\d$/;
+const RE_PLACEHOLDER = /^(\?+|-+|\.+|…|xx+|n\/?a|nc|todo|tbd|inconnue?|illisible|à préciser|a preciser|à confirmer|a confirmer|à compléter|a completer|à définir|a definir)$/i;
+function texteManquant(v) { return typeof v !== 'string' || v.trim() === '' || RE_PLACEHOLDER.test(v.trim()); }
+// Pour les doses et posologies : tout « ? » ou texte vide/générique rend la valeur incomplète.
+function valeurIncomplete(v) { return texteManquant(v) || v.includes('?') || /\b(illisible|à préciser|a preciser|à confirmer|a confirmer)\b/i.test(v); }
+function heureValide(h) { return typeof h === 'string' && RE_HEURE.test(h); }
+function dateValide(s) {
+  if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const [y, m, d] = s.split('-').map(Number); const dt = new Date(y, m - 1, d);
+  return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
+}
+
+function validerDonnees(brut) {
+  const R = { meta: {}, fictif: false, rendezVous: [], medicaments: [], consignes: [], contacts: [], listeSymptomes: [], structure: [], avertissements: [] };
+  if (!brut || typeof brut !== 'object' || Array.isArray(brut)) {
+    R.structure.push('Le fichier doit contenir un objet JSON qui commence par « { ».');
+    return R;
+  }
+  if (brut.meta && typeof brut.meta === 'object') { R.meta = brut.meta; R.fictif = brut.meta.donnees_fictives === true; }
+  else R.avertissements.push('Section « meta » absente : les données sont considérées comme réelles (non fictives).');
+
+  const ids = new Set();
+  const liste = nom => {
+    const v = brut[nom];
+    if (v === undefined) { R.avertissements.push(`Section « ${nom} » absente (considérée comme vide).`); return []; }
+    if (!Array.isArray(v)) { R.structure.push(`Section « ${nom} » : une liste entre crochets [ … ] est attendue.`); return []; }
+    return v;
+  };
+  // Contrôles communs : objet, identifiant unique, statut connu.
+  const commun = (item, section, i) => {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) {
+      R.structure.push(`Section « ${section} », élément n° ${i + 1} : ce n’est pas un objet { … } ; il est ignoré.`);
+      return null;
+    }
+    const pb = [];
+    let id = item.id;
+    if (typeof id !== 'string' || id.trim() === '') { pb.push('Identifiant « id » manquant.'); id = `${section}-sans-id-${i + 1}`; }
+    else if (ids.has(id)) { pb.push(`Identifiant « ${id} » utilisé plusieurs fois.`); id = `${id}#${i + 1}`; }
+    ids.add(id);
+    const st = item.statut;
+    if (st !== 'confirme' && st !== 'a_confirmer') pb.push(st === undefined ? 'Statut absent (attendu : « confirme » ou « a_confirmer »).' : `Statut inconnu « ${String(st)} » (attendu : « confirme » ou « a_confirmer »).`);
+    return { id, pb, declareConfirme: st === 'confirme', declareAConfirmer: st === 'a_confirmer' };
+  };
+  const finir = (c, item, problemes, extra) => Object.assign({}, item, extra, {
+    _id: c.id, _problemes: c.pb.concat(problemes),
+    _declareConfirme: c.declareConfirme, _declareAConfirmer: c.declareAConfirmer,
+    _confirme: c.declareConfirme && c.pb.length === 0 && problemes.length === 0
+  });
+
+  liste('rendez_vous').forEach((r, i) => {
+    const c = commun(r, 'rendez_vous', i); if (!c) return;
+    const pb = [];
+    const type = Object.prototype.hasOwnProperty.call(TYPES_RDV, r.type) ? r.type : 'autre';
+    if (!Object.prototype.hasOwnProperty.call(TYPES_RDV, r.type)) pb.push(r.type === undefined ? 'Type de rendez-vous absent.' : `Type « ${String(r.type)} » inconnu.`);
+    if (texteManquant(r.titre)) pb.push('Titre manquant.');
+    if (r.date === undefined || r.date === null || r.date === '') pb.push('Date manquante.');
+    else if (!dateValide(r.date)) pb.push(`Date invalide « ${String(r.date)} » (format attendu AAAA-MM-JJ).`);
+    if (r.heure === undefined || r.heure === null || r.heure === '') pb.push('Heure manquante.');
+    else if (!heureValide(r.heure)) pb.push(`Heure invalide « ${String(r.heure)} » (format attendu HH:MM).`);
+    let duree = 60;
+    if (r.duree_minutes !== undefined) {
+      if (Number.isInteger(r.duree_minutes) && r.duree_minutes > 0 && r.duree_minutes <= 1440) duree = r.duree_minutes;
+      else R.avertissements.push(`Rendez-vous « ${c.id} » : durée invalide, 60 minutes utilisées pour l’export.`);
+    }
+    if (texteManquant(r.source)) R.avertissements.push(`Rendez-vous « ${c.id} » : source non renseignée.`);
+    R.rendezVous.push(finir(c, r, pb, { _type: type, _duree: duree, _dateOK: dateValide(r.date), _heureOK: heureValide(r.heure) }));
+  });
+
+  liste('medicaments').forEach((m, i) => {
+    const c = commun(m, 'medicaments', i); if (!c) return;
+    const pb = [];
+    if (texteManquant(m.nom)) pb.push('Nom du médicament manquant.');
+    if (m.dose === undefined || m.dose === null || m.dose === '') pb.push('Dose manquante.');
+    else if (typeof m.dose !== 'string' || valeurIncomplete(m.dose)) pb.push(`Dose incomplète ou illisible (« ${String(m.dose)} »).`);
+    if (!Array.isArray(m.horaires) || m.horaires.length === 0) pb.push('Horaire(s) de prise manquant(s).');
+    else m.horaires.forEach(h => { if (!heureValide(h)) pb.push(`Horaire invalide « ${String(h)} » (format attendu HH:MM).`); });
+    const aDates = m.dates !== undefined;
+    if (aDates) {
+      if (!Array.isArray(m.dates) || m.dates.length === 0) pb.push('Liste « dates » vide ou invalide.');
+      else m.dates.forEach(d => { if (!dateValide(d)) pb.push(`Date invalide « ${String(d)} » dans « dates ».`); });
+    } else {
+      if (!dateValide(m.date_debut)) pb.push(m.date_debut ? `Date de début invalide « ${String(m.date_debut)} ».` : 'Date de début manquante.');
+      if (m.date_fin !== undefined && m.date_fin !== null) {
+        if (!dateValide(m.date_fin)) pb.push(`Date de fin invalide « ${String(m.date_fin)} ».`);
+        else if (dateValide(m.date_debut) && m.date_fin < m.date_debut) pb.push('Date de fin antérieure à la date de début.');
+      }
+    }
+    if (m.jours !== undefined) {
+      if (!Array.isArray(m.jours) || m.jours.length === 0) pb.push('Liste « jours » vide ou invalide.');
+      else m.jours.forEach(j => { if (!JOURS.includes(String(j).toLowerCase())) pb.push(`Jour inconnu « ${String(j)} » (attendu : lundi, mardi…).`); });
+    }
+    if (texteManquant(m.source)) R.avertissements.push(`Médicament « ${c.id} » : source (ordonnance) non renseignée.`);
+    R.medicaments.push(finir(c, m, pb, {}));
+  });
+
+  liste('consignes_symptomes').forEach((s, i) => {
+    const c = commun(s, 'consignes_symptomes', i); if (!c) return;
+    const pb = [];
+    if (texteManquant(s.symptome)) pb.push('Symptôme manquant.');
+    const aMed = !texteManquant(s.medicament);
+    const aPoso = s.posologie !== undefined && s.posologie !== null && s.posologie !== '';
+    if (texteManquant(s.consigne) && !aMed) pb.push('Texte de la consigne manquant.');
+    if (aMed && (!aPoso || typeof s.posologie !== 'string' || valeurIncomplete(s.posologie))) pb.push('Médicament indiqué sans posologie complète.');
+    if (!aMed && aPoso) pb.push('Posologie indiquée sans nom de médicament.');
+    if (texteManquant(s.source)) pb.push('Source manquante (obligatoire pour afficher une consigne).');
+    let syn = [];
+    if (s.synonymes !== undefined) {
+      if (Array.isArray(s.synonymes) && s.synonymes.every(x => typeof x === 'string')) syn = s.synonymes;
+      else R.avertissements.push(`Consigne « ${c.id} » : « synonymes » doit être une liste de textes ; ignoré.`);
+    }
+    R.consignes.push(finir(c, s, pb, { _synonymes: syn, _aMedicament: aMed }));
+  });
+
+  liste('contacts').forEach((ct, i) => {
+    const c = commun(ct, 'contacts', i); if (!c) return;
+    const pb = [];
+    if (texteManquant(ct.nom)) pb.push('Nom manquant.');
+    if (texteManquant(ct.telephone)) pb.push('Téléphone manquant.');
+    R.contacts.push(finir(c, ct, pb, {}));
+  });
+
+  if (brut.liste_symptomes !== undefined) {
+    if (Array.isArray(brut.liste_symptomes)) R.listeSymptomes = brut.liste_symptomes.filter(x => typeof x === 'string' && x.trim());
+    else R.structure.push('« liste_symptomes » doit être une liste de textes.');
+  }
+  return R;
+}
+
+// ---------- État ----------
+let D = validerDonnees({});           // données validées
+let SOURCE = { type: 'demo', libelle: '' };
+let ERREUR_CHARGEMENT = '';
+let reglages = Object.assign({}, REGLAGES_DEFAUT, stock.lire('reglages', {}));
+const etat = {
+  mois: null, jourSel: null, filtres: null,
+  datePrises: null, symptome: '', saisieSymptome: '', periodeHisto: '30', rapportImport: null
+};
+
+// ---------- Requêtes sur les données ----------
+const rdvConfirmes = () => D.rendezVous.filter(r => r._confirme);
+const rdvDebut = r => dateHeure(r.date, r.heure);
+const rdvFin = r => new Date(rdvDebut(r).getTime() + r._duree * 60000);
+function rdvAVenir(maintenant, filtre) {
+  return rdvConfirmes().filter(r => rdvFin(r) > maintenant && (!filtre || filtre(r))).sort((a, b) => rdvDebut(a) - rdvDebut(b));
+}
+// Rendez-vous non confirmés mais datés : visibles dans le calendrier avec la mention « À confirmer ».
+const rdvDatesNonConfirmes = () => D.rendezVous.filter(r => !r._confirme && r._dateOK);
+
+function medActifLe(m, iso) {
+  if (Array.isArray(m.dates)) return m.dates.includes(iso);
+  if (iso < m.date_debut) return false;
+  if (m.date_fin && iso > m.date_fin) return false;
+  if (Array.isArray(m.jours)) return m.jours.map(j => String(j).toLowerCase()).includes(JOURS[isoVersDate(iso).getDay()]);
+  return true;
+}
+function prisesDuJour(iso) {
+  const out = [];
+  D.medicaments.filter(m => m._confirme).forEach(m => {
+    if (!medActifLe(m, iso)) return;
+    m.horaires.forEach(h => out.push({ cle: `${iso}|${m._id}|${h}`, date: iso, heure: h, med: m }));
+  });
+  return out.sort((a, b) => a.heure.localeCompare(b.heure) || a.med.nom.localeCompare(b.med.nom));
+}
+const lirePrises = () => stock.lire('prises', {});
+const lireRealises = () => stock.lire('realises', {});
+
+function elementsAConfirmer() {
+  const f = x => !x._confirme;
+  return { rdv: D.rendezVous.filter(f), meds: D.medicaments.filter(f), consignes: D.consignes.filter(f), contacts: D.contacts.filter(f) };
+}
+function nbAConfirmer() {
+  const e = elementsAConfirmer();
+  return e.rdv.length + e.meds.length + e.consignes.length + e.contacts.length + D.structure.length;
+}
+
+function rechercherConsignes(requete) {
+  const q = normaliser(requete);
+  if (q.length < 2) return [];
+  return D.consignes.filter(c => c._confirme).filter(c => {
+    const termes = [c.symptome].concat(c._synonymes).map(normaliser).filter(Boolean);
+    return termes.some(t => t === q || (q.length >= 3 && (t.includes(q) || q.includes(t))));
+  });
+}
+function listeSymptomesSelection() {
+  const vus = new Map();
+  D.listeSymptomes.concat(D.consignes.filter(c => c._confirme).map(c => c.symptome)).forEach(s => {
+    const k = normaliser(s); if (k && !vus.has(k)) vus.set(k, s.trim());
+  });
+  return [...vus.values()].sort((a, b) => a.localeCompare(b, 'fr'));
+}
+
+// ---------- Composants ----------
+function chipType(type) { return `<span class="type" style="--tc:var(--t-${type})">${esc(TYPES_RDV[type])}</span>`; }
+function badgeStatut(x) {
+  return x._confirme ? '<span class="badge ok">Confirmé</span>' : '<span class="badge alerte">À confirmer</span>';
+}
+function carteRdv(r, options = {}) {
+  const realises = lireRealises();
+  const quand = `${jourLong(r.date)}${r._heureOK ? ' à ' + heureFr(r.heure) : ''}`;
+  const heureMq = !r._heureOK ? '<div><strong>Heure à confirmer</strong></div>' : '';
+  let actions = '';
+  if (r._confirme && options.actions !== false) {
+    const passe = rdvDebut(r) <= new Date();
+    if (realises[r._id]) actions = `<div class="ligne-actions"><span class="badge ok">Réalisé</span><button class="secondaire petit" data-action="annuler-realise" data-id="${esc(r._id)}">Annuler « réalisé »</button></div>`;
+    else if (passe) actions = `<div class="ligne-actions"><button class="secondaire petit" data-action="marquer-realise" data-id="${esc(r._id)}">Marquer comme réalisé</button></div>`;
+  }
+  return `<article class="carte rdv${r._confirme ? '' : ' non-confirme'}">
+    <div>${chipType(r._type)} ${badgeStatut(r)}</div>
+    <h3>${esc(r.titre || '(sans titre)')}</h3>
+    <div class="quand">${esc(quand)}</div>
+    <div class="meta">${heureMq}
+      ${r.lieu ? `<div>Lieu : ${esc(r.lieu)}</div>` : ''}
+      ${r.professionnel ? `<div>Avec : ${esc(r.professionnel)}</div>` : ''}
+      ${r.notes ? `<div>Note : ${esc(r.notes)}</div>` : ''}
+    </div>
+    ${r._confirme ? '' : '<p class="source">Information à vérifier. <a href="#/a-confirmer">Voir pourquoi</a></p>'}
+    ${r.source ? `<div class="source">Source : ${esc(r.source)}</div>` : ''}
+    ${actions}
+  </article>`;
+}
+function lignePrise(p, prises, aujourdhui, prefixe) {
+  const coche = prises[p.cle];
+  const futur = p.date > aujourdhui;
+  const idInfo = `${prefixe}-info-${p.cle.replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const libelle = `Pris : ${p.med.nom}, ${heureFr(p.heure)}`;
+  return `<li class="prise${coche ? ' prise-cochee' : ''}">
+    <div class="heure">${esc(heureFr(p.heure))}</div>
+    <div id="${esc(idInfo)}">
+      <div class="nom">${esc(p.med.nom)}</div>
+      <div class="dose">Dose prescrite : <strong>${esc(p.med.dose)}</strong></div>
+      ${p.med.consignes_prise ? `<div class="meta">Consigne de prise : ${esc(p.med.consignes_prise)}</div>` : ''}
+      ${p.med.source ? `<div class="source">Source : ${esc(p.med.source)}</div>` : ''}
+      ${coche ? `<div class="etat-prise">Cochée le ${esc(fmtHorodatage.format(new Date(coche.coche)))}</div>` : ''}
+    </div>
+    <label class="case-pris" title="${futur ? 'Tu pourras cocher cette prise le jour venu.' : ''}">
+      <input type="checkbox" data-cle="${esc(p.cle)}" ${coche ? 'checked' : ''} ${futur ? 'disabled' : ''} aria-label="${esc(libelle)}" aria-describedby="${esc(idInfo)}">
+      Pris
+    </label>
+  </li>`;
+}
+function blocContacts() {
+  const cts = D.contacts.filter(c => c._confirme);
+  if (!cts.length) return '';
+  return `<h2>Contacts enregistrés</h2>` + cts.map(c => `<div class="carte">
+    <h3>${esc(c.nom)}</h3>${c.role ? `<div class="meta">${esc(c.role)}</div>` : ''}
+    <div class="ligne-actions"><a class="bouton secondaire" href="tel:${esc(String(c.telephone).replace(/[^0-9+]/g, ''))}">Appeler le ${esc(c.telephone)}</a></div>
+    ${c.source ? `<div class="source">Source : ${esc(c.source)}</div>` : ''}
+  </div>`).join('');
+}
+
+// ---------- Vues ----------
+function vueAccueil() {
+  const maintenant = new Date();
+  const auj = dateVersIso(maintenant);
+  const prochain = rdvAVenir(maintenant)[0];
+  const traitements = rdvAVenir(maintenant, r => TYPES_TRAITEMENT.includes(r._type)).slice(0, 3);
+  const prises = prisesDuJour(auj);
+  const etatPrises = lirePrises();
+  const faites = prises.filter(p => etatPrises[p.cle]).length;
+  const nbNC = rdvDatesNonConfirmes().filter(r => r.date >= auj).length;
+  const nbConf = nbAConfirmer();
+  return `<h1>Bonjour</h1>
+  <p class="sous-titre">${esc(jourLong(auj))}</p>
+  ${nbConf ? `<div class="encadre alerte"><p><strong>${nbConf} élément${nbConf > 1 ? 's' : ''} à confirmer</strong> dans tes données : ${nbConf > 1 ? 'ils ne sont pas affichés' : 'il n’est pas affiché'} comme ${nbConf > 1 ? 'confirmés' : 'confirmé'}.</p><p><a href="#/a-confirmer">Voir l’écran « À confirmer »</a></p></div>` : ''}
+  <h2>Prochain rendez-vous</h2>
+  ${prochain ? carteRdv(prochain, { actions: false }) : '<div class="carte vide">Aucun rendez-vous confirmé à venir.</div>'}
+  ${nbNC ? `<p class="meta">${nbNC} rendez-vous à venir ${nbNC > 1 ? 'sont' : 'est'} encore à confirmer et n’${nbNC > 1 ? 'apparaissent' : 'apparaît'} pas ici.</p>` : ''}
+  <h2>Prochains traitements</h2>
+  ${traitements.length ? traitements.map(r => carteRdv(r, { actions: false })).join('') : '<div class="carte vide">Aucune séance de traitement confirmée à venir.</div>'}
+  <h2>Prises du jour</h2>
+  ${prises.length ? `<p class="progression">${faites} sur ${prises.length} cochée${faites > 1 ? 's' : ''}</p>
+    <ul class="prises">${prises.map(p => lignePrise(p, etatPrises, auj, 'acc')).join('')}</ul>`
+    : '<div class="carte vide">Aucune prise confirmée prévue aujourd’hui.</div>'}
+  <p class="meta"><a href="#/prises">Ouvrir l’agenda des médicaments</a></p>`;
+}
+
+function vueCalendrier() {
+  const auj = dateVersIso(new Date());
+  if (!etat.mois) { const d = new Date(); etat.mois = new Date(d.getFullYear(), d.getMonth(), 1); }
+  if (!etat.jourSel) etat.jourSel = auj;
+  const tous = rdvConfirmes().concat(rdvDatesNonConfirmes());
+  const typesPresents = Object.keys(TYPES_RDV).filter(t => tous.some(r => r._type === t));
+  if (!etat.filtres) etat.filtres = new Set(Object.keys(TYPES_RDV));
+  const visibles = tous.filter(r => etat.filtres.has(r._type));
+  const parJour = {};
+  visibles.forEach(r => { (parJour[r.date] = parJour[r.date] || []).push(r); });
+  Object.values(parJour).forEach(l => l.sort((a, b) => (a.heure || '99').localeCompare(b.heure || '99')));
+
+  const y = etat.mois.getFullYear(), mo = etat.mois.getMonth();
+  const decalage = (new Date(y, mo, 1).getDay() + 6) % 7;
+  const nbJours = new Date(y, mo + 1, 0).getDate();
+  let cellules = [];
+  for (let i = 0; i < decalage; i++) cellules.push('<td></td>');
+  for (let j = 1; j <= nbJours; j++) {
+    const iso = `${y}-${pad(mo + 1)}-${pad(j)}`;
+    const l = parJour[iso] || [];
+    const classes = ['jour', iso === auj ? 'aujourdhui' : '', iso === etat.jourSel ? 'selectionne' : ''].join(' ');
+    const label = `${jourLong(iso)} : ${l.length ? l.length + ' rendez-vous' : 'aucun rendez-vous'}${iso === auj ? ' (aujourd’hui)' : ''}`;
+    const points = l.slice(0, 4).map(r => `<span class="point${r._confirme ? '' : ' non-confirme'}" style="--tc:var(--t-${r._type})"></span>`).join('');
+    cellules.push(`<td><button class="${classes}" data-action="jour" data-iso="${iso}" aria-label="${esc(label)}" aria-pressed="${iso === etat.jourSel}">${j}<span class="points" aria-hidden="true">${points}</span></button></td>`);
+  }
+  while (cellules.length % 7) cellules.push('<td></td>');
+  let lignes = '';
+  for (let i = 0; i < cellules.length; i += 7) lignes += `<tr>${cellules.slice(i, i + 7).join('')}</tr>`;
+
+  const duJour = parJour[etat.jourSel] || [];
+  const aVenir = visibles.filter(r => r.date >= auj).sort((a, b) => (a.date + (a.heure || '99')).localeCompare(b.date + (b.heure || '99'))).slice(0, 10);
+
+  return `<h1>Calendrier</h1>
+  <div class="filtres" role="group" aria-label="Types de rendez-vous affichés">
+    ${typesPresents.map(t => `<label class="filtre" style="--tc:var(--t-${t})"><input type="checkbox" data-action="filtre" data-type="${t}" ${etat.filtres.has(t) ? 'checked' : ''}><span class="pastille" aria-hidden="true"></span>${esc(TYPES_RDV[t])}</label>`).join('')}
+  </div>
+  <div class="entete-mois">
+    <button class="secondaire" data-action="mois" data-delta="-1" aria-label="Mois précédent">‹</button>
+    <h2 id="titre-mois" aria-live="polite">${esc(fmtMois.format(etat.mois))}</h2>
+    <button class="secondaire" data-action="mois" data-delta="1" aria-label="Mois suivant">›</button>
+  </div>
+  <table class="mois" aria-labelledby="titre-mois">
+    <thead><tr>${['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'].map((j, i) => `<th scope="col"><abbr title="${JOURS[(i + 1) % 7]}">${j}</abbr></th>`).join('')}</tr></thead>
+    <tbody>${lignes}</tbody>
+  </table>
+  <div class="ligne-actions"><button class="secondaire petit" data-action="aujourdhui">Aujourd’hui</button></div>
+  <p class="meta">Point plein : confirmé · point en pointillés : à confirmer.</p>
+  <h2 id="titre-jour">${esc(jourLong(etat.jourSel))}</h2>
+  ${duJour.length ? duJour.map(r => carteRdv(r)).join('') : '<div class="carte vide">Aucun rendez-vous ce jour.</div>'}
+  <h2>À venir</h2>
+  ${aVenir.length ? aVenir.map(r => carteRdv(r)).join('') : '<div class="carte vide">Aucun rendez-vous à venir.</div>'}`;
+}
+
+function vuePrises() {
+  const auj = dateVersIso(new Date());
+  if (!etat.datePrises) etat.datePrises = auj;
+  const iso = etat.datePrises;
+  const prises = prisesDuJour(iso);
+  const etatP = lirePrises();
+  const faites = prises.filter(p => etatP[p.cle]).length;
+  const exclus = D.medicaments.filter(m => !m._confirme).length;
+  return `<h1>Prises de médicaments</h1>
+  <div class="nav-date">
+    <button class="secondaire" data-action="jour-prises" data-delta="-1" aria-label="Jour précédent">‹</button>
+    <label class="sr" for="date-prises">Date</label>
+    <input type="date" id="date-prises" value="${iso}">
+    <button class="secondaire" data-action="jour-prises" data-delta="1" aria-label="Jour suivant">›</button>
+  </div>
+  <h2 style="margin-top:0">${esc(jourLong(iso))}${iso === auj ? ' — aujourd’hui' : ''}</h2>
+  ${iso !== auj ? '<div class="ligne-actions" style="margin:0 0 12px"><button class="secondaire petit" data-action="prises-aujourdhui">Revenir à aujourd’hui</button></div>' : ''}
+  ${prises.length ? `<p class="progression">${faites} sur ${prises.length} cochée${faites > 1 ? 's' : ''}</p>
+    <ul class="prises">${prises.map(p => lignePrise(p, etatP, auj, 'agd')).join('')}</ul>`
+    : '<div class="carte vide">Aucune prise confirmée prévue ce jour.</div>'}
+  ${iso > auj ? '<p class="meta">Les cases des jours à venir ne peuvent pas encore être cochées.</p>' : ''}
+  ${exclus ? `<div class="encadre alerte"><p>${exclus} médicament${exclus > 1 ? 's' : ''} n’${exclus > 1 ? 'apparaissent' : 'apparaît'} pas ici, car ${exclus > 1 ? 'leurs' : 'ses'} informations sont incomplètes ou à confirmer.</p><p><a href="#/a-confirmer">Voir l’écran « À confirmer »</a></p></div>` : ''}
+  <div class="encadre info"><p>Cette page reprend uniquement les ordonnances enregistrées. Pour toute question sur une prise, contacte ton équipe soignante ou ton pharmacien.</p></div>`;
+}
+
+function vueSymptomes() {
+  const options = listeSymptomesSelection();
+  const requete = etat.symptome;
+  let resultat = '';
+  if (requete) {
+    const trouves = rechercherConsignes(requete);
+    resultat = `<h2>Résultat pour « ${esc(requete)} »</h2>` + (trouves.length
+      ? `<p class="meta">${trouves.length} consigne${trouves.length > 1 ? 's' : ''} confirmée${trouves.length > 1 ? 's' : ''} trouvée${trouves.length > 1 ? 's' : ''} dans tes documents enregistrés.</p>` +
+        trouves.map(c => `<article class="carte consigne">
+          <h3>${esc(c.symptome)}</h3>
+          ${!texteManquant(c.consigne) ? `<p class="texte-consigne">${esc(c.consigne)}</p>` : ''}
+          <dl class="details">
+            ${c._aMedicament ? `<dt>Médicament</dt><dd>${esc(c.medicament)}</dd><dt>Posologie indiquée dans le document</dt><dd>${esc(c.posologie)}</dd>` : ''}
+            <dt>Source</dt><dd>${esc(c.source)}</dd>
+            ${c.date_document ? `<dt>Date du document</dt><dd>${esc(c.date_document)}</dd>` : ''}
+          </dl>
+        </article>`).join('') +
+        '<p class="meta">Pour toute question, contacte ton équipe soignante ou ton pharmacien.</p>'
+      : `<div class="carte"><p class="message-aucune" id="message-aucune">${esc(MESSAGE_AUCUNE_CONSIGNE)}</p></div>`) + blocContacts();
+  }
+  return `<h1>Recherche par symptôme</h1>
+  <div class="encadre info"><p>Cette page affiche uniquement les consignes <strong>confirmées</strong> et recopiées depuis tes documents, avec leur source. Elle ne donne aucun avis médical et ne calcule aucune dose.</p></div>
+  <form id="form-symptome" novalidate>
+    <label class="champ" for="sel-symptome">Choisir un symptôme</label>
+    <select id="sel-symptome">
+      <option value="">— Choisir dans la liste —</option>
+      ${options.map(s => `<option value="${esc(s)}" ${normaliser(s) === normaliser(requete) ? 'selected' : ''}>${esc(s)}</option>`).join('')}
+    </select>
+    <label class="champ" for="txt-symptome">Ou écrire un symptôme</label>
+    <input type="search" id="txt-symptome" autocomplete="off" value="${esc(etat.saisieSymptome)}" placeholder="Par exemple : nausées">
+    <div class="ligne-actions"><button type="submit">Rechercher</button>${requete ? '<button type="button" class="secondaire" data-action="effacer-symptome">Effacer</button>' : ''}</div>
+  </form>
+  <div id="resultat-symptome">${resultat}</div>`;
+}
+
+function vueHistorique() {
+  const prises = lirePrises();
+  const realises = lireRealises();
+  const limite = etat.periodeHisto === 'tout' ? '0000-00-00' : ajouterJours(dateVersIso(new Date()), -Number(etat.periodeHisto));
+  const entrees = Object.entries(prises).map(([cle, v]) => Object.assign({ cle }, v)).filter(e => e.date >= limite)
+    .sort((a, b) => (b.date + b.heure).localeCompare(a.date + a.heure));
+  const parDate = {};
+  entrees.forEach(e => { (parDate[e.date] = parDate[e.date] || []).push(e); });
+  const rdvR = Object.entries(realises).map(([id, v]) => Object.assign({ id }, v)).filter(e => e.date >= limite)
+    .sort((a, b) => (b.date + (b.heure || '')).localeCompare(a.date + (a.heure || '')));
+  const maintenant = new Date();
+  const nonMarques = rdvConfirmes().filter(r => rdvDebut(r) <= maintenant && !realises[r._id]).sort((a, b) => rdvDebut(b) - rdvDebut(a));
+  return `<h1>Historique</h1>
+  <label class="champ" for="periode-histo">Période</label>
+  <select id="periode-histo">
+    <option value="7" ${etat.periodeHisto === '7' ? 'selected' : ''}>7 derniers jours</option>
+    <option value="30" ${etat.periodeHisto === '30' ? 'selected' : ''}>30 derniers jours</option>
+    <option value="90" ${etat.periodeHisto === '90' ? 'selected' : ''}>90 derniers jours</option>
+    <option value="tout" ${etat.periodeHisto === 'tout' ? 'selected' : ''}>Tout</option>
+  </select>
+  <h2>Prises cochées</h2>
+  ${entrees.length ? Object.keys(parDate).map(d => `<div class="carte"><h3>${esc(jourLong(d))}</h3><ul class="raisons">${parDate[d].map(e => `<li><strong>${esc(heureFr(e.heure))}</strong> — ${esc(e.nom)} — dose prescrite : ${esc(e.dose)} <span class="meta">(cochée le ${esc(fmtHorodatage.format(new Date(e.coche)))})</span></li>`).join('')}</ul></div>`).join('')
+    : '<div class="carte vide">Aucune prise cochée sur cette période.</div>'}
+  <h2>Rendez-vous réalisés</h2>
+  ${rdvR.length ? rdvR.map(e => `<div class="carte"><div>${chipType(Object.prototype.hasOwnProperty.call(TYPES_RDV, e.type) ? e.type : 'autre')}</div><h3>${esc(e.titre)}</h3><div class="meta">${esc(jourLong(e.date))}${e.heure ? ' à ' + esc(heureFr(e.heure)) : ''}</div>
+      <div class="ligne-actions"><button class="secondaire petit" data-action="annuler-realise" data-id="${esc(e.id)}">Annuler « réalisé »</button></div></div>`).join('')
+    : '<div class="carte vide">Aucun rendez-vous marqué comme réalisé sur cette période.</div>'}
+  ${nonMarques.length ? `<h2>Rendez-vous passés non marqués</h2>${nonMarques.map(r => carteRdv(r)).join('')}` : ''}`;
+}
+
+function vueRappels() {
+  const r = reglages;
+  const notifSupportee = 'Notification' in window;
+  const permission = notifSupportee ? Notification.permission : 'non disponible';
+  const nbRdv = rdvConfirmes().filter(x => rdvFin(x) > new Date()).length;
+  const nbMeds = D.medicaments.filter(m => m._confirme).length;
+  const exclus = D.rendezVous.filter(x => !x._confirme).length + D.medicaments.filter(m => !m._confirme).length;
+  return `<h1>Rappels</h1>
+  <div class="encadre ok">
+    <h2 style="margin-top:0">Méthode fiable : le calendrier du téléphone</h2>
+    <p>Exporte un fichier <strong>.ics</strong> et ajoute-le au calendrier de ton iPhone ou de ton ordinateur. Les alertes du calendrier fonctionnent même quand cette application est fermée.</p>
+    <p>Seuls les rendez-vous et prises <strong>confirmés et complets</strong> sont exportés.${exclus ? ` ${exclus} élément${exclus > 1 ? 's' : ''} à confirmer ${exclus > 1 ? 'sont exclus' : 'est exclu'}.` : ''}</p>
+  </div>
+  <div class="encadre alerte">
+    <h2 style="margin-top:0">Limites des rappels dans l’application</h2>
+    <p>Les rappels affichés par cette application ne fonctionnent que <strong>lorsqu’elle est ouverte</strong> à l’écran. Ce ne sont <strong>pas des alarmes garanties</strong> : rien ne s’affiche si l’application, le navigateur ou le téléphone est fermé ou en veille.</p>
+    <p>Sur iPhone, même installée sur l’écran d’accueil, cette application ne peut pas te prévenir lorsqu’elle est fermée. Pour être prévenu, utilise l’export vers le Calendrier.</p>
+  </div>
+
+  <fieldset>
+    <legend>Rendez-vous</legend>
+    <label class="option"><input type="checkbox" data-reglage="rdvActif" ${r.rdvActif ? 'checked' : ''}> Inclure les alertes de rendez-vous</label>
+    <p class="meta" style="margin:8px 0 2px">Moment(s) de l’alerte :</p>
+    ${DELAIS_RDV.map(d => `<label class="option"><input type="checkbox" data-delai-rdv="${d.min}" ${r.rdvDelais.includes(d.min) ? 'checked' : ''}> ${d.label}</label>`).join('')}
+  </fieldset>
+  <fieldset>
+    <legend>Prises de médicaments</legend>
+    <label class="option"><input type="checkbox" data-reglage="medActif" ${r.medActif ? 'checked' : ''}> Inclure les alertes de prise</label>
+    <label class="champ" for="delai-med">Moment de l’alerte</label>
+    <select id="delai-med">${DELAIS_MED.map(d => `<option value="${d.min}" ${r.medDelai === d.min ? 'selected' : ''}>${d.label}</option>`).join('')}</select>
+    <label class="champ" for="horizon">Période exportée pour les prises</label>
+    <select id="horizon">${[14, 30, 60, 90].map(n => `<option value="${n}" ${r.horizonJours === n ? 'selected' : ''}>${n} prochains jours</option>`).join('')}</select>
+    <p class="meta">Les prises sont exportées jusqu’à la fin du traitement ou de cette période, selon ce qui arrive en premier. Refais un export avant la fin de la période.</p>
+  </fieldset>
+  <fieldset>
+    <legend>Confidentialité du calendrier</legend>
+    <label class="option"><input type="checkbox" data-reglage="masquerDetails" ${r.masquerDetails ? 'checked' : ''}> Masquer les détails (nom du médicament, dose, lieu) dans le calendrier</label>
+    <p class="meta">Si ton calendrier est synchronisé avec iCloud ou un autre compte, son contenu y est copié. Pour garder les données uniquement sur le téléphone, importe-les dans un calendrier « Sur mon iPhone », ou masque les détails.</p>
+  </fieldset>
+  <div class="ligne-actions">
+    <button data-action="ics" data-quoi="tout">Exporter tout (.ics)</button>
+    <button class="secondaire" data-action="ics" data-quoi="rdv">Rendez-vous seulement (${nbRdv})</button>
+    <button class="secondaire" data-action="ics" data-quoi="meds">Prises seulement (${nbMeds} médicament${nbMeds > 1 ? 's' : ''})</button>
+  </div>
+  ${partageFichiersPossible() ? `<div class="ligne-actions"><button class="secondaire" data-action="ics" data-quoi="tout" data-partager="1">Partager le fichier .ics (iPhone)…</button></div>
+  <p class="meta">Sur iPhone : si « Exporter » n’ouvre pas directement l’ajout au Calendrier, utilise « Partager », puis « Enregistrer dans Fichiers ». Ouvre ensuite le fichier depuis l’app Fichiers. Fais d’abord un essai avec les données fictives.</p>` : ''}
+  <p class="meta">Après une modification de tes données, supprime les anciens événements (ou le calendrier dédié) avant d’importer le nouveau fichier, pour éviter les doublons.</p>
+
+  <h2>Rappels pendant que l’application est ouverte</h2>
+  <fieldset>
+    <legend>Rappels à l’écran</legend>
+    <label class="option"><input type="checkbox" data-reglage="rappelsAppli" ${r.rappelsAppli ? 'checked' : ''}> Afficher un rappel à l’écran (application ouverte uniquement)</label>
+    <label class="option"><input type="checkbox" data-reglage="notifNavigateur" ${r.notifNavigateur ? 'checked' : ''} ${notifSupportee ? '' : 'disabled'}> Utiliser aussi les notifications du navigateur (ordinateur)</label>
+    <p class="meta">Notifications du navigateur : ${notifSupportee ? (permission === 'granted' ? 'autorisées' : permission === 'denied' ? 'refusées dans les réglages du navigateur' : 'pas encore autorisées') : 'non disponibles ici'}.
+    ${notifSupportee && permission === 'default' ? '<button class="secondaire petit" data-action="permission-notif">Autoriser</button>' : ''}</p>
+    <div class="ligne-actions"><button class="secondaire petit" data-action="test-rappel">Tester un rappel à l’écran</button></div>
+  </fieldset>`;
+}
+
+function blocNonValide(titre, contenu) {
+  return `<details class="non-valide"><summary>${titre}</summary>
+    <p><strong>Texte non validé : ne pas suivre comme instruction.</strong> À vérifier avec ton équipe soignante ou ton pharmacien.</p>${contenu}</details>`;
+}
+function listeRaisons(x) {
+  const titre = x._declareConfirme ? 'Marqué « confirmé », mais refusé par la validation :' : x._declareAConfirmer ? 'Marqué « à confirmer » dans les données.' : 'Statut à corriger :';
+  return `<p class="meta" style="margin:6px 0 0"><strong>${titre}</strong></p>${x._problemes.length ? `<ul class="raisons">${x._problemes.map(p => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}`;
+}
+function vueAConfirmer() {
+  const e = elementsAConfirmer();
+  const total = nbAConfirmer();
+  const sec = (titre, items, rendu) => items.length ? `<h2>${titre} (${items.length})</h2>${items.map(rendu).join('')}` : '';
+  return `<h1>À confirmer</h1>
+  <p>Ces informations sont incertaines, incomplètes ou mal structurées. Elles <strong>ne sont pas utilisées</strong> comme rendez-vous confirmés, prises ou consignes. Vérifie-les avec tes documents ou ton équipe soignante, puis corrige le fichier de données.</p>
+  ${total === 0 ? '<div class="encadre ok"><p>Rien à confirmer : toutes les données sont complètes et confirmées.</p></div>' : ''}
+  ${D.structure.length ? `<h2>Problèmes de structure du fichier (${D.structure.length})</h2><div class="carte"><ul class="raisons">${D.structure.map(s => `<li>${esc(s)}</li>`).join('')}</ul></div>` : ''}
+  ${sec('Rendez-vous', e.rdv, r => `<article class="carte rdv non-confirme">
+      <div>${chipType(r._type)} <span class="badge alerte">À confirmer</span></div>
+      <h3>${esc(r.titre || '(sans titre)')}</h3>
+      <div class="meta">Date enregistrée : ${r._dateOK ? esc(jourLong(r.date)) : '<strong>inconnue</strong>'} · Heure : ${r._heureOK ? esc(heureFr(r.heure)) : '<strong>à confirmer</strong>'}</div>
+      ${listeRaisons(r)}
+      ${r.source ? `<div class="source">Source : ${esc(r.source)}</div>` : ''}
+    </article>`)}
+  ${sec('Médicaments', e.meds, m => `<article class="carte">
+      <h3>${esc(m.nom || '(nom manquant)')}</h3>
+      <p class="meta">Ce médicament n’apparaît pas dans l’agenda des prises et n’est pas exporté.</p>
+      ${listeRaisons(m)}
+      ${blocNonValide('Voir les valeurs enregistrées (non validées)', `<dl class="details">
+        <dt>Dose</dt><dd>${esc(m.dose ?? '—')}</dd>
+        <dt>Horaires</dt><dd>${Array.isArray(m.horaires) && m.horaires.length ? esc(m.horaires.join(', ')) : '—'}</dd>
+        <dt>Période</dt><dd>${esc(m.date_debut || '?')} → ${esc(m.date_fin || '?')}</dd></dl>`)}
+      ${m.source ? `<div class="source">Source : ${esc(m.source)}</div>` : ''}
+    </article>`)}
+  ${sec('Consignes liées à un symptôme', e.consignes, c => `<article class="carte">
+      <h3>${esc(c.symptome || '(symptôme manquant)')}</h3>
+      <p class="meta">Cette consigne n’est pas affichée dans la recherche par symptôme.</p>
+      ${listeRaisons(c)}
+      ${blocNonValide('Voir le texte enregistré (non validé)', `<dl class="details">
+        <dt>Consigne</dt><dd>${esc(c.consigne || '—')}</dd>
+        ${c.medicament ? `<dt>Médicament</dt><dd>${esc(c.medicament)}</dd>` : ''}
+        ${c.posologie ? `<dt>Posologie</dt><dd>${esc(c.posologie)}</dd>` : ''}</dl>`)}
+      ${c.source ? `<div class="source">Source : ${esc(c.source)}</div>` : ''}
+    </article>`)}
+  ${sec('Contacts', e.contacts, c => `<article class="carte"><h3>${esc(c.nom || '(nom manquant)')}</h3>${listeRaisons(c)}${c.source ? `<div class="source">Source : ${esc(c.source)}</div>` : ''}</article>`)}
+  ${D.avertissements.length ? `<h2>Remarques (non bloquantes)</h2><div class="carte"><ul class="raisons">${D.avertissements.map(s => `<li>${esc(s)}</li>`).join('')}</ul></div>` : ''}`;
+}
+
+function resumeValidation(V) {
+  const ligne = (nom, l) => `<li>${nom} : ${l.filter(x => x._confirme).length} confirmé(s), ${l.filter(x => !x._confirme).length} à confirmer</li>`;
+  return `<ul class="raisons">${ligne('Rendez-vous', V.rendezVous)}${ligne('Médicaments', V.medicaments)}${ligne('Consignes', V.consignes)}${ligne('Contacts', V.contacts)}
+    ${V.structure.length ? `<li><strong>${V.structure.length} problème(s) de structure</strong></li>` : ''}</ul>`;
+}
+function vueDonnees() {
+  const imp = stock.lire('donneesImportees', null);
+  const libSource = SOURCE.type === 'fichier' ? 'Fichier « donnees_medicales.json » placé à côté de l’application'
+    : SOURCE.type === 'import' ? `Fichier importé${imp && imp.nomFichier ? ` « ${esc(imp.nomFichier)} »` : ''}${imp && imp.importeLe ? ` le ${esc(fmtHorodatage.format(new Date(imp.importeLe)))}` : ''}`
+    : 'Données de démonstration intégrées';
+  return `<h1>Données et confidentialité</h1>
+  <div class="encadre ${D.fictif ? 'danger' : 'info'}">
+    <p><strong>Données utilisées :</strong> ${libSource}.</p>
+    ${D.fictif ? '<p><strong>Ces données sont fictives.</strong> Importe ton propre fichier pour utiliser l’application.</p>' : ''}
+    ${D.meta && D.meta.derniere_mise_a_jour ? `<p>Dernière mise à jour indiquée dans le fichier : ${esc(D.meta.derniere_mise_a_jour)}</p>` : ''}
+    ${resumeValidation(D)}
+  </div>
+  ${etat.rapportImport ? `<div class="encadre ${etat.rapportImport.ok ? 'ok' : 'danger'}" role="status">${etat.rapportImport.html}</div>` : ''}
+
+  <h2>Importer mes données médicales</h2>
+  <p>Choisis ton fichier <code>donnees_medicales.json</code>. Il est lu et conservé <strong>uniquement sur cet appareil</strong>.</p>
+  ${SOURCE.type === 'fichier' ? '<p class="encadre alerte">Un fichier « donnees_medicales.json » est actuellement servi à côté de l’application : il est prioritaire sur un import manuel.</p>' : ''}
+  <label class="champ" for="fichier-donnees">Fichier JSON</label>
+  <input type="file" id="fichier-donnees" accept=".json,application/json">
+  <div class="ligne-actions">
+    <button class="secondaire" data-action="modele">Télécharger le modèle (données fictives)</button>
+    ${SOURCE.type === 'import' ? '<button class="secondaire" data-action="revenir-demo">Revenir aux données de démonstration</button>' : ''}
+  </div>
+
+  <h2>Sauvegarde de mon suivi</h2>
+  <p>Les cases cochées et les rendez-vous réalisés sont enregistrés dans ce navigateur. Fais une sauvegarde de temps en temps : vider les données du navigateur les efface.</p>
+  <div class="ligne-actions">
+    <button class="secondaire" data-action="sauvegarder">Télécharger une sauvegarde</button>
+    <label class="bouton secondaire" for="fichier-sauvegarde">Restaurer une sauvegarde</label>
+  </div>
+  <input type="file" id="fichier-sauvegarde" accept=".json,application/json" class="sr">
+
+  <h2>Confidentialité</h2>
+  <ul class="raisons">
+    <li>Aucune donnée de santé n’est envoyée sur Internet : une règle de sécurité intégrée bloque toute connexion vers l’extérieur. Internet sert uniquement à télécharger l’application elle-même, qui contient seulement les données fictives.</li>
+    <li>Sur iPhone, installe l’application sur l’écran d’accueil <strong>avant</strong> d’importer tes données : les données importées dans Safari et celles de l’application installée sont séparées.</li>
+    <li>Pas de compte, de publicité, d’outil d’analyse ni de service externe.</li>
+    <li>Les données restent dans le stockage local de ce navigateur, sur cet appareil.</li>
+    <li>Les fichiers exportés (.ics, sauvegarde) contiennent des données de santé : garde-les en lieu sûr.</li>
+  </ul>
+  <div class="ligne-actions"><button class="danger" data-action="tout-effacer">Effacer toutes les données de cet appareil</button></div>`;
+}
+
+function vuePlus() {
+  const n = nbAConfirmer();
+  return `<h1>Plus</h1>
+  <ul class="liste-liens">
+    <li><a href="#/historique"><span>Historique<span class="desc">Prises cochées et rendez-vous réalisés</span></span><span aria-hidden="true">›</span></a></li>
+    <li><a href="#/rappels"><span>Rappels<span class="desc">Export vers le calendrier et réglages</span></span><span aria-hidden="true">›</span></a></li>
+    <li><a href="#/a-confirmer"><span>À confirmer<span class="desc">Données incertaines ou manquantes</span></span>${n ? `<span class="badge compte">${n}</span>` : '<span aria-hidden="true">›</span>'}</a></li>
+    <li><a href="#/donnees"><span>Données et confidentialité<span class="desc">Importer, sauvegarder, effacer</span></span><span aria-hidden="true">›</span></a></li>
+  </ul>`;
+}
+
+const VUES = {
+  accueil: [vueAccueil, 'Accueil'], calendrier: [vueCalendrier, 'Calendrier'], prises: [vuePrises, 'Prises'],
+  symptomes: [vueSymptomes, 'Symptômes'], historique: [vueHistorique, 'Historique'], rappels: [vueRappels, 'Rappels'],
+  'a-confirmer': [vueAConfirmer, 'À confirmer'], donnees: [vueDonnees, 'Données'], plus: [vuePlus, 'Plus']
+};
+function routeCourante() { const r = location.hash.replace(/^#\/?/, ''); return VUES[r] ? r : 'accueil'; }
+
+// Rendu ; « nav » = changement de page (focus sur le titre), sinon on restaure le focus.
+function rendre(nav) {
+  const route = routeCourante();
+  const actif = document.activeElement;
+  const cleFocus = actif && (actif.dataset.cle ? `[data-cle="${CSS.escape(actif.dataset.cle)}"]` : actif.id ? `#${CSS.escape(actif.id)}` : null);
+  const main = document.getElementById('contenu');
+  main.innerHTML = VUES[route][0]();
+  document.title = `${VUES[route][1]} — Mes soins`;
+  document.querySelectorAll('nav.principale a').forEach(a => {
+    const courant = a.dataset.route === route || (route !== 'plus' && a.dataset.route === 'plus' && ['historique', 'rappels', 'a-confirmer', 'donnees'].includes(route));
+    if (courant) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  });
+  const n = nbAConfirmer();
+  document.querySelectorAll('[data-compte]').forEach(b => { b.hidden = !n; b.textContent = n; b.setAttribute('aria-label', `${n} à confirmer`); });
+  afficherBandeaux();
+  if (nav) { const h1 = main.querySelector('h1'); if (h1) { h1.tabIndex = -1; h1.focus({ preventScroll: true }); } window.scrollTo(0, 0); }
+  else if (cleFocus) { const el = main.querySelector(cleFocus); if (el) el.focus({ preventScroll: true }); }
+}
+function afficherBandeaux() {
+  document.getElementById('bandeau-demo').hidden = !D.fictif;
+  const be = document.getElementById('bandeau-erreur');
+  be.hidden = !ERREUR_CHARGEMENT; be.textContent = ERREUR_CHARGEMENT;
+  document.getElementById('bandeau-stockage').hidden = stockageOK;
+}
+
+// ---------- Actions ----------
+function basculerPrise(cle, coche) {
+  const prises = lirePrises();
+  if (coche) {
+    const [date, idMed, heure] = cle.split('|');
+    const med = D.medicaments.find(m => m._id === idMed);
+    prises[cle] = { date, heure, idMed, nom: med ? med.nom : idMed, dose: med ? med.dose : '', coche: new Date().toISOString() };
+  } else {
+    delete prises[cle];
+  }
+  stock.ecrire('prises', prises);
+  annoncer(coche ? 'Prise cochée.' : 'Prise décochée.');
+  rendre(false);
+}
+function marquerRealise(id, oui) {
+  const realises = lireRealises();
+  if (oui) {
+    const r = D.rendezVous.find(x => x._id === id);
+    if (!r) return;
+    realises[id] = { titre: r.titre, date: r.date, heure: r.heure, type: r._type, marque: new Date().toISOString() };
+  } else delete realises[id];
+  stock.ecrire('realises', realises);
+  annoncer(oui ? 'Rendez-vous marqué comme réalisé.' : 'Marque « réalisé » annulée.');
+  rendre(false);
+}
+function sauverReglages() { stock.ecrire('reglages', reglages); }
+
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-action]');
+  if (!b || b.tagName === 'INPUT') return;
+  const a = b.dataset.action;
+  if (a === 'jour') { etat.jourSel = b.dataset.iso; rendre(false); const t = document.getElementById('titre-jour'); if (t) { t.tabIndex = -1; } }
+  else if (a === 'mois') { etat.mois = new Date(etat.mois.getFullYear(), etat.mois.getMonth() + Number(b.dataset.delta), 1); rendre(false); }
+  else if (a === 'aujourdhui') { const d = new Date(); etat.mois = new Date(d.getFullYear(), d.getMonth(), 1); etat.jourSel = dateVersIso(d); rendre(false); }
+  else if (a === 'jour-prises') { etat.datePrises = ajouterJours(etat.datePrises, Number(b.dataset.delta)); rendre(false); }
+  else if (a === 'prises-aujourdhui') { etat.datePrises = dateVersIso(new Date()); rendre(false); }
+  else if (a === 'marquer-realise') marquerRealise(b.dataset.id, true);
+  else if (a === 'annuler-realise') marquerRealise(b.dataset.id, false);
+  else if (a === 'effacer-symptome') { etat.symptome = ''; etat.saisieSymptome = ''; rendre(false); document.getElementById('sel-symptome').focus(); }
+  else if (a === 'ics') exporterIcs(b.dataset.quoi, b.dataset.partager === '1');
+  else if (a === 'permission-notif') { Notification.requestPermission().then(() => rendre(false)); }
+  else if (a === 'test-rappel') afficherRappel('test', 'Rappel de test', 'Voici à quoi ressemble un rappel à l’écran. Il ne s’affiche que si l’application est ouverte.');
+  else if (a === 'modele') telecharger('donnees_medicales.exemple.json', JSON.stringify(JSON.parse(document.getElementById('donnees-demo').textContent), null, 2), 'application/json');
+  else if (a === 'revenir-demo') { if (confirm('Revenir aux données fictives de démonstration ? Ton fichier importé sera retiré de cet appareil (tes coches sont conservées).')) { stock.supprimer('donneesImportees'); etat.rapportImport = null; chargerDonnees().then(() => rendre(false)); } }
+  else if (a === 'sauvegarder') {
+    const s = { type: 'sauvegarde-mes-soins', version: 1, creeLe: new Date().toISOString(), prises: lirePrises(), realises: lireRealises(), reglages };
+    telecharger(`sauvegarde-mes-soins-${dateVersIso(new Date())}.json`, JSON.stringify(s, null, 2), 'application/json');
+  }
+  else if (a === 'tout-effacer') {
+    if (confirm('Effacer toutes les données de cet appareil (données importées, coches, rendez-vous réalisés, réglages) ? Cette action est définitive.')) {
+      stock.toutEffacer(); reglages = Object.assign({}, REGLAGES_DEFAUT); etat.rapportImport = null;
+      chargerDonnees().then(() => { rendre(false); annoncer('Toutes les données de cet appareil ont été effacées.'); });
+    }
+  }
+});
+
+document.addEventListener('change', ev => {
+  const t = ev.target;
+  if (t.matches('input[type="checkbox"][data-cle]')) {
+    if (!t.checked && !confirm('Décocher cette prise ?')) { t.checked = true; return; }
+    basculerPrise(t.dataset.cle, t.checked);
+  }
+  else if (t.matches('[data-action="filtre"]')) { t.checked ? etat.filtres.add(t.dataset.type) : etat.filtres.delete(t.dataset.type); rendre(false); }
+  else if (t.id === 'date-prises') { if (dateValide(t.value)) { etat.datePrises = t.value; rendre(false); } }
+  else if (t.id === 'sel-symptome') { etat.symptome = t.value; etat.saisieSymptome = ''; rendre(false); }
+  else if (t.id === 'periode-histo') { etat.periodeHisto = t.value; rendre(false); }
+  else if (t.dataset.reglage) {
+    reglages[t.dataset.reglage] = t.checked; sauverReglages();
+    if (t.dataset.reglage === 'notifNavigateur' && t.checked && 'Notification' in window && Notification.permission === 'default') Notification.requestPermission().then(() => rendre(false));
+  }
+  else if (t.dataset.delaiRdv) {
+    const v = Number(t.dataset.delaiRdv);
+    reglages.rdvDelais = t.checked ? [...new Set(reglages.rdvDelais.concat(v))] : reglages.rdvDelais.filter(x => x !== v);
+    sauverReglages();
+  }
+  else if (t.id === 'delai-med') { reglages.medDelai = Number(t.value); sauverReglages(); }
+  else if (t.id === 'horizon') { reglages.horizonJours = Number(t.value); sauverReglages(); }
+  else if (t.id === 'fichier-donnees' && t.files[0]) importerDonnees(t.files[0]);
+  else if (t.id === 'fichier-sauvegarde' && t.files[0]) restaurerSauvegarde(t.files[0]);
+});
+
+document.addEventListener('submit', ev => {
+  if (ev.target.id !== 'form-symptome') return;
+  ev.preventDefault();
+  const txt = document.getElementById('txt-symptome').value.trim();
+  const sel = document.getElementById('sel-symptome').value;
+  etat.saisieSymptome = txt;
+  etat.symptome = txt || sel;
+  rendre(false);
+  const res = document.querySelector('#resultat-symptome h2');
+  if (res) { res.tabIndex = -1; res.focus(); }
+});
+
+function lireFichier(f) {
+  return new Promise((ok, ko) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => ko(r.error); r.readAsText(f, 'utf-8'); });
+}
+async function importerDonnees(fichier) {
+  let brut;
+  try { brut = JSON.parse(await lireFichier(fichier)); }
+  catch (e) {
+    etat.rapportImport = { ok: false, html: `<p><strong>Import refusé :</strong> le fichier n’est pas un JSON valide.</p><p class="meta">${esc(e.message)}</p><p>Tes données précédentes sont conservées.</p>` };
+    rendre(false); return;
+  }
+  const V = validerDonnees(brut);
+  if (V.structure.length && !V.rendezVous.length && !V.medicaments.length && !V.consignes.length) {
+    etat.rapportImport = { ok: false, html: `<p><strong>Import refusé :</strong> structure non reconnue.</p><ul class="raisons">${V.structure.map(s => `<li>${esc(s)}</li>`).join('')}</ul><p>Tes données précédentes sont conservées.</p>` };
+    rendre(false); return;
+  }
+  if (!stock.ecrire('donneesImportees', { json: brut, nomFichier: fichier.name, importeLe: new Date().toISOString() })) {
+    etat.rapportImport = { ok: false, html: '<p><strong>Import impossible :</strong> le stockage local est indisponible ou plein.</p>' };
+    rendre(false); return;
+  }
+  await chargerDonnees();
+  etat.rapportImport = { ok: true, html: `<p><strong>Import réussi</strong> (« ${esc(fichier.name)} »).</p>${resumeValidation(D)}${nbAConfirmer() ? '<p><a href="#/a-confirmer">Voir les éléments à confirmer</a></p>' : ''}${SOURCE.type === 'fichier' ? '<p>Attention : le fichier servi à côté de l’application reste prioritaire.</p>' : ''}` };
+  rendre(false);
+}
+async function restaurerSauvegarde(fichier) {
+  try {
+    const s = JSON.parse(await lireFichier(fichier));
+    if (!s || s.type !== 'sauvegarde-mes-soins') throw new Error('Ce fichier n’est pas une sauvegarde de « Mes soins ».');
+    if (!confirm('Remplacer les coches, rendez-vous réalisés et réglages de cet appareil par ceux de la sauvegarde ?')) return;
+    stock.ecrire('prises', s.prises || {}); stock.ecrire('realises', s.realises || {});
+    if (s.reglages) { reglages = Object.assign({}, REGLAGES_DEFAUT, s.reglages); sauverReglages(); }
+    etat.rapportImport = { ok: true, html: '<p><strong>Sauvegarde restaurée.</strong></p>' };
+  } catch (e) {
+    etat.rapportImport = { ok: false, html: `<p><strong>Restauration impossible :</strong> ${esc(e.message)}</p>` };
+  }
+  rendre(false);
+}
+
+// ---------- Export .ics (calendrier) ----------
+function icsTexte(t) { return String(t).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
+function icsPlier(ligne) {
+  const enc = new TextEncoder(); const parts = []; let cur = ''; let len = 0; let max = 75;
+  for (const ch of ligne) { const l = enc.encode(ch).length; if (len + l > max) { parts.push(cur); cur = ''; len = 0; max = 74; } cur += ch; len += l; }
+  parts.push(cur); return parts.join('\r\n ');
+}
+function icsLocal(d) { return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`; }
+function icsUtc(d) { return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); }
+function icsAlarme(minutes, texte) {
+  return ['BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${icsTexte(texte)}`, `TRIGGER:${minutes > 0 ? `-PT${minutes}M` : 'PT0S'}`, 'END:VALARM'];
+}
+function genererIcs(quoi, maintenant = new Date()) {
+  const r = reglages; const masque = r.masquerDetails; const stamp = icsUtc(maintenant);
+  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Mes soins//Application locale//FR', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:Mes soins'];
+  let nb = 0;
+  if (quoi === 'tout' || quoi === 'rdv') {
+    rdvConfirmes().filter(x => rdvFin(x) > maintenant).forEach(x => {
+      const titre = masque ? 'Rendez-vous médical' : x.titre;
+      const desc = masque ? 'Détails dans l’application Mes soins.'
+        : [`Type : ${TYPES_RDV[x._type]}`, x.professionnel && `Avec : ${x.professionnel}`, x.notes && `Note : ${x.notes}`, x.source && `Source : ${x.source}`, 'Exporté depuis Mes soins (données confirmées).'].filter(Boolean).join('\n');
+      L.push('BEGIN:VEVENT', `UID:rdv-${x._id}@mes-soins.local`, `DTSTAMP:${stamp}`, `DTSTART:${icsLocal(rdvDebut(x))}`, `DTEND:${icsLocal(rdvFin(x))}`,
+        `SUMMARY:${icsTexte(titre)}`, `DESCRIPTION:${icsTexte(desc)}`);
+      if (!masque && x.lieu) L.push(`LOCATION:${icsTexte(x.lieu)}`);
+      if (r.rdvActif) [...r.rdvDelais].sort((a, b) => b - a).forEach(m => L.push(...icsAlarme(m, `Rappel : ${titre}`)));
+      L.push('END:VEVENT'); nb++;
+    });
+  }
+  if (quoi === 'tout' || quoi === 'meds') {
+    const auj = dateVersIso(maintenant);
+    const limite = ajouterJours(auj, r.horizonJours);
+    D.medicaments.filter(m => m._confirme).forEach(m => {
+      const titre = masque ? 'Prise de médicament' : `${m.nom} — ${m.dose}`;
+      const desc = masque ? 'Détails dans l’application Mes soins.'
+        : [`Dose telle que prescrite : ${m.dose}`, m.consignes_prise && `Consigne de prise : ${m.consignes_prise}`, m.source && `Source : ${m.source}`, 'Rappel issu de l’ordonnance enregistrée (données confirmées).'].filter(Boolean).join('\n');
+      const evenement = (uid, debut, rrule) => {
+        const fin = new Date(debut.getTime() + 15 * 60000);
+        L.push('BEGIN:VEVENT', `UID:${uid}@mes-soins.local`, `DTSTAMP:${stamp}`, `DTSTART:${icsLocal(debut)}`, `DTEND:${icsLocal(fin)}`);
+        if (rrule) L.push(`RRULE:${rrule}`);
+        L.push(`SUMMARY:${icsTexte(titre)}`, `DESCRIPTION:${icsTexte(desc)}`);
+        if (r.medActif) L.push(...icsAlarme(r.medDelai, `Prise prévue : ${titre}`));
+        L.push('END:VEVENT'); nb++;
+      };
+      m.horaires.forEach(h => {
+        if (Array.isArray(m.dates)) {
+          m.dates.filter(d => d >= auj && d <= limite).forEach(d => {
+            if (dateHeure(d, h) > maintenant) evenement(`med-${m._id}-${d}-${h.replace(':', '')}`, dateHeure(d, h), null);
+          });
+          return;
+        }
+        let debut = m.date_debut > auj ? m.date_debut : auj;
+        const fin = m.date_fin && m.date_fin < limite ? m.date_fin : limite;
+        // Premier jour réellement concerné (jours de la semaine, horaire pas encore passé).
+        while (debut <= fin && (!medActifLe(m, debut) || dateHeure(debut, h) <= maintenant)) debut = ajouterJours(debut, 1);
+        if (debut > fin) return;
+        const until = `UNTIL=${fin.replace(/-/g, '')}T235959`;
+        const rrule = Array.isArray(m.jours)
+          ? `FREQ=WEEKLY;BYDAY=${m.jours.map(j => JOURS_ICS[JOURS.indexOf(String(j).toLowerCase())]).join(',')};${until}`
+          : `FREQ=DAILY;${until}`;
+        evenement(`med-${m._id}-${h.replace(':', '')}`, dateHeure(debut, h), rrule);
+      });
+    });
+  }
+  L.push('END:VCALENDAR');
+  return { texte: L.map(icsPlier).join('\r\n') + '\r\n', nb };
+}
+function partageFichiersPossible() {
+  try { return !!(navigator.canShare && navigator.canShare({ files: [new File(['x'], 'test.ics', { type: 'text/calendar' })] })); }
+  catch (e) { return false; }
+}
+function exporterIcs(quoi, partager) {
+  const { texte, nb } = genererIcs(quoi);
+  if (!nb) { alert('Aucun élément confirmé à exporter.'); return; }
+  const noms = { tout: 'mes-soins', rdv: 'mes-soins-rendez-vous', meds: 'mes-soins-prises' };
+  const nom = `${noms[quoi]}-${dateVersIso(new Date())}.ics`;
+  if (partager && partageFichiersPossible()) {
+    navigator.share({ files: [new File([texte], nom, { type: 'text/calendar' })], title: 'Mes soins' })
+      .then(() => annoncer('Fichier partagé.'))
+      .catch(e => { if (e && e.name !== 'AbortError') alert('Partage impossible : ' + e.message); });
+    return;
+  }
+  telecharger(nom, texte, 'text/calendar;charset=utf-8');
+  annoncer(`${nb} événement${nb > 1 ? 's' : ''} exporté${nb > 1 ? 's' : ''}.`);
+}
+
+// ---------- Rappels pendant que l'application est ouverte ----------
+// Non garantis : ils ne fonctionnent que si la page est ouverte et active.
+function afficherRappel(cle, titre, texte, lien) {
+  const zone = document.getElementById('zone-rappels');
+  if (zone.querySelector(`[data-rappel="${CSS.escape(cle)}"]`)) return;
+  const div = document.createElement('div');
+  div.className = 'rappel'; div.setAttribute('role', 'alert'); div.dataset.rappel = cle;
+  div.innerHTML = `<strong>${esc(titre)}</strong><p>${esc(texte)}</p><div class="ligne-actions">${lien ? `<a class="bouton secondaire" href="${esc(lien)}">Ouvrir</a>` : ''}<button class="petit">OK</button></div>`;
+  div.querySelector('button').addEventListener('click', () => div.remove());
+  if (lien) div.querySelector('a').addEventListener('click', () => div.remove());
+  zone.appendChild(div);
+  if (reglages.notifNavigateur && 'Notification' in window && Notification.permission === 'granted') {
+    try { new Notification(titre, { body: texte, tag: cle }); } catch (e) { /* non disponible sur ce navigateur */ }
+  }
+}
+function verifierRappels() {
+  if (!reglages.rappelsAppli) return;
+  const maintenant = new Date(); const t = maintenant.getTime();
+  const fenetre = 10 * 60000; // ne pas afficher un rappel vieux de plus de 10 min
+  const emis = stock.lire('rappelsEmis', {});
+  Object.keys(emis).forEach(k => { if (t - emis[k] > 3 * 86400000) delete emis[k]; });
+  const emettre = (cle, instant, titre, texte, lien) => {
+    if (emis[cle] || t < instant || t - instant > fenetre) return;
+    emis[cle] = t; afficherRappel(cle, titre, texte, lien);
+  };
+  if (reglages.rdvActif) rdvAVenir(maintenant).forEach(r => {
+    const debut = rdvDebut(r).getTime();
+    if (debut < t) return;
+    reglages.rdvDelais.forEach(m => emettre(`rdv|${r._id}|${m}`, debut - m * 60000, `Rendez-vous : ${r.titre}`, `${jourLong(r.date)} à ${heureFr(r.heure)}${r.lieu ? ' — ' + r.lieu : ''}`, '#/calendrier'));
+  });
+  if (reglages.medActif) {
+    const prises = lirePrises();
+    prisesDuJour(dateVersIso(maintenant)).forEach(p => {
+      if (prises[p.cle]) return;
+      emettre(`med|${p.cle}|${reglages.medDelai}`, dateHeure(p.date, p.heure).getTime() - reglages.medDelai * 60000,
+        `Prise prévue à ${heureFr(p.heure)}`, `${p.med.nom} — dose prescrite : ${p.med.dose}`, '#/prises');
+    });
+  }
+  stock.ecrire('rappelsEmis', emis);
+}
+
+// ---------- Chargement des données ----------
+function estServeurLocal() {
+  if (location.protocol !== 'http:' && location.protocol !== 'https:') return false;
+  const h = location.hostname;
+  return h === 'localhost' || h === '::1' || h === '[::1]' || h.endsWith('.local') ||
+    /^127\./.test(h) || /^10\./.test(h) || /^192\.168\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h);
+}
+async function chargerDonnees() {
+  ERREUR_CHARGEMENT = '';
+  let brut = null;
+  // 1) Fichier donnees_medicales.json servi à côté de l'application (serveur local uniquement).
+  // Jamais sur l'adresse publique : un fichier de données ne doit pas être publié.
+  if (estServeurLocal()) {
+    try {
+      const rep = await fetch('donnees_medicales.json', { cache: 'no-store' });
+      if (rep.ok) {
+        const txt = await rep.text();
+        try { brut = JSON.parse(txt); SOURCE = { type: 'fichier' }; }
+        catch (e) { ERREUR_CHARGEMENT = `Le fichier donnees_medicales.json contient une erreur de syntaxe et n’a pas été utilisé (${e.message}).`; }
+      }
+    } catch (e) { /* pas de fichier : normal */ }
+  }
+  // 2) Données importées sur cet appareil.
+  if (!brut) { const imp = stock.lire('donneesImportees', null); if (imp && imp.json) { brut = imp.json; SOURCE = { type: 'import' }; } }
+  // 3) Données fictives de démonstration.
+  if (!brut) { brut = JSON.parse(document.getElementById('donnees-demo').textContent); SOURCE = { type: 'demo' }; }
+  D = validerDonnees(brut);
+  if (SOURCE.type === 'demo') D.fictif = true;
+}
+
+let jourAffiche = dateVersIso(new Date());
+function tic() {
+  const j = dateVersIso(new Date());
+  if (j !== jourAffiche) { jourAffiche = j; etat.datePrises = null; if (['accueil', 'prises'].includes(routeCourante())) rendre(false); }
+  verifierRappels();
+}
+
+window.addEventListener('hashchange', () => rendre(true));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) tic(); });
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || estServeurLocal())) {
+  navigator.serviceWorker.register('sw.js').catch(() => { /* fonctionnement en ligne uniquement */ });
+}
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+chargerDonnees().then(() => {
+  rendre(false);
+  tic();
+  setInterval(tic, 30000);
+});
+</script>
+</body>
+</html>
