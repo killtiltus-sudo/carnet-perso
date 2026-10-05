@@ -107,7 +107,10 @@ Les médicaments « si besoin », sans horaire fixe, se notent plutôt dans `con
 | `source` | **oui** | Sans source, la consigne n'est jamais affichée |
 | `date_document` | non | `"2026-09-17"` |
 
-**Autres sections** : `liste_symptomes` (symptômes proposés dans la liste de recherche) et `contacts` (`nom`, `role`, `telephone`, `statut`, `source`).
+**Autres sections** :
+- `liste_symptomes` : symptômes proposés dans la liste de recherche ;
+- `contacts` : `nom`, `role`, `telephone`, `statut`, `source` ;
+- `remarques` : liste de textes (doublons, contradictions, informations manquantes relevés dans les documents), affichée dans l'écran « À confirmer ».
 
 ### Ce que la validation refuse
 

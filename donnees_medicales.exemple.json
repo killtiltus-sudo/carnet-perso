@@ -219,6 +219,10 @@
     }
   ],
 
+  "remarques": [
+    "Exemple fictif de remarque : deux documents donnent des informations différentes pour un même médicament."
+  ],
+
   "liste_symptomes": [
     "Nausées",
     "Fièvre",

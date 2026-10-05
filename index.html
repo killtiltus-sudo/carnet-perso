@@ -457,6 +457,9 @@ nav.principale .badge.compte { position: absolute; top: 4px; left: 55%; }
    "_explication": "Exemple volontairement incomplet : marqué « confirme », mais un médicament est indiqué sans posologie. La validation le refuse."
   }
  ],
+ "remarques": [
+  "Exemple fictif de remarque : deux documents donnent des informations différentes pour un même médicament."
+ ],
  "liste_symptomes": [
   "Nausées",
   "Fièvre",
@@ -587,7 +590,7 @@ function dateValide(s) {
 }
 
 function validerDonnees(brut) {
-  const R = { meta: {}, fictif: false, rendezVous: [], medicaments: [], consignes: [], contacts: [], listeSymptomes: [], structure: [], avertissements: [] };
+  const R = { meta: {}, fictif: false, rendezVous: [], medicaments: [], consignes: [], contacts: [], listeSymptomes: [], structure: [], avertissements: [], remarques: [] };
   if (!brut || typeof brut !== 'object' || Array.isArray(brut)) {
     R.structure.push('Le fichier doit contenir un objet JSON qui commence par « { ».');
     return R;
@@ -695,6 +698,10 @@ function validerDonnees(brut) {
     R.contacts.push(finir(c, ct, pb, {}));
   });
 
+  if (brut.remarques !== undefined) {
+    if (Array.isArray(brut.remarques)) R.remarques = brut.remarques.filter(x => typeof x === 'string' && x.trim());
+    else R.structure.push('« remarques » doit être une liste de textes.');
+  }
   if (brut.liste_symptomes !== undefined) {
     if (Array.isArray(brut.liste_symptomes)) R.listeSymptomes = brut.liste_symptomes.filter(x => typeof x === 'string' && x.trim());
     else R.structure.push('« liste_symptomes » doit être une liste de textes.');
@@ -1096,6 +1103,7 @@ function vueAConfirmer() {
       ${c.source ? `<div class="source">Source : ${esc(c.source)}</div>` : ''}
     </article>`)}
   ${sec('Contacts', e.contacts, c => `<article class="carte"><h3>${esc(c.nom || '(nom manquant)')}</h3>${listeRaisons(c)}${c.source ? `<div class="source">Source : ${esc(c.source)}</div>` : ''}</article>`)}
+  ${D.remarques.length ? `<h2>Remarques sur les documents (${D.remarques.length})</h2><div class="carte"><p class="meta">Doublons, contradictions ou informations manquantes relevés dans les documents. À éclaircir avec l’équipe soignante.</p><ul class="raisons">${D.remarques.map(s => `<li>${esc(s)}</li>`).join('')}</ul></div>` : ''}
   ${D.avertissements.length ? `<h2>Remarques (non bloquantes)</h2><div class="carte"><ul class="raisons">${D.avertissements.map(s => `<li>${esc(s)}</li>`).join('')}</ul></div>` : ''}`;
 }
 
