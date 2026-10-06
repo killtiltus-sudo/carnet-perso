@@ -33,7 +33,7 @@ async function nouvellePage(options = {}, heure = '2026-10-06T07:50:00+02:00') {
   const erreurs = [];
   const requetes = [];
   page.on('pageerror', e => erreurs.push(e.message));
-  page.on('console', m => { if (m.type() === 'error') erreurs.push(m.text()); });
+  page.on('console', m => { if (m.type() === 'error' && !m.text().startsWith('Failed to load resource')) erreurs.push(m.text()); });
   page.on('request', r => requetes.push(r.url()));
   await page.clock.install({ time: new Date(heure) });
   return { contexte, page, erreurs, requetes };
@@ -81,6 +81,9 @@ verifier(cal.includes('Séance de chimiothérapie — cycle 2'), 'chimiothérapi
 await page.locator('button[data-iso="2026-10-20"]').click();
 cal = await page.locator('main').innerText();
 verifier(cal.includes('Scanner de contrôle') && cal.includes('Heure à confirmer') && cal.includes('À confirmer'), 'scanner sans heure affiché « À confirmer »');
+await page.locator('button[data-iso="2026-10-10"]').click();
+cal = await page.locator('main').innerText();
+verifier(cal.includes('Injection DÉMO à domicile') && cal.includes('Soin à domicile'), 'injections à domicile affichées dans le calendrier');
 await page.locator('button[data-action="mois"][data-delta="1"]').click();
 verifier((await page.locator('#titre-mois').innerText()).toLowerCase().includes('novembre'), 'navigation vers novembre');
 await page.locator('button[data-iso="2026-11-05"]').click();
@@ -220,7 +223,7 @@ verifier((await page.locator('button[data-action="marquer-realise"]').count()) =
 await page.goto(urlFichier + '#/rappels');
 const [tp] = await Promise.all([page.waitForEvent('download'), page.click('button[data-action="ics"][data-quoi="rdv"]')]);
 const icsP = fs.readFileSync(await tp.path(), 'utf-8');
-verifier(icsP.includes('rdv-demo-03') && !icsP.includes('med-demo'), 'export calendrier : rendez-vous uniquement');
+verifier(icsP.includes('rdv-demo-03') && icsP.includes('soin-med-demo-f') && !icsP.includes('med-demo-a') && !icsP.includes('RRULE'), 'export calendrier : rendez-vous et soins à domicile, sans les prises de médicaments');
 verifier(erreurs.length === 0, 'aucune erreur JavaScript (mode proche)');
 await contexte.close();
 
@@ -291,6 +294,61 @@ await page.goto(urlFichier + '#/prises');
 await page.screenshot({ path: path.join(dossierCaptures, '12-prises-sombre.png'), fullPage: true });
 verifier(erreurs.length === 0, 'aucune erreur JavaScript (apparence)');
 await contexte.close();
+
+console.log('10e. Mises à jour automatiques chiffrées');
+{
+  const { chiffrer, codeAbonnement, nouvelleCle } = await import('./chiffrer.mjs');
+  const dossierAbo = fs.mkdtempSync(path.join(os.tmpdir(), 'mes-soins-abo-'));
+  for (const f of ['index.html', 'sw.js', 'manifest.webmanifest']) fs.copyFileSync(path.join(dossier, f), path.join(dossierAbo, f));
+  for (const d of ['icones', 'polices']) { fs.mkdirSync(path.join(dossierAbo, d)); for (const f of fs.readdirSync(path.join(dossier, d))) fs.copyFileSync(path.join(dossier, d, f), path.join(dossierAbo, d, f)); }
+  const cle = nouvelleCle();
+  const v1 = JSON.parse(fs.readFileSync(path.join(dossier, 'donnees_medicales.exemple.json'), 'utf-8'));
+  v1.meta.donnees_fictives = false;
+  fs.writeFileSync(path.join(dossierAbo, 'carnet.chiffre.json'), JSON.stringify(await chiffrer(v1, cle, '2026-10-06T08:00:00Z')));
+  const contenuPublic = fs.readFileSync(path.join(dossierAbo, 'carnet.chiffre.json'), 'utf-8');
+  verifier(!contenuPublic.includes('DÉMO') && !contenuPublic.includes('rendez_vous'), 'fichier publié illisible sans la clé');
+  const srv = http.createServer((req, res) => {
+    const f = path.join(dossierAbo, decodeURIComponent(new URL(req.url, 'http://x').pathname).replace(/^\/$/, '/index.html'));
+    if (!f.startsWith(dossierAbo) || !fs.existsSync(f)) { res.writeHead(404); return res.end(); }
+    const types = { '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.js': 'text/javascript', '.png': 'image/png', '.woff2': 'font/woff2' };
+    res.writeHead(200, { 'Content-Type': types[path.extname(f)] || 'text/html; charset=utf-8' }); fs.createReadStream(f).pipe(res);
+  }).listen(0);
+  const urlAbo = `http://127.0.0.1:${srv.address().port}/`;
+  ({ contexte, page, erreurs } = await nouvellePage());
+  await page.goto(urlAbo + '#/donnees');
+  await page.fill('#code-import', codeAbonnement('carnet.chiffre.json', nouvelleCle(), 'patient'));
+  await page.click('button[data-action="importer-code"]'); await page.waitForTimeout(1500);
+  verifier((await page.locator('main').innerText()).includes('Abonnement impossible'), 'mauvaise clé refusée');
+  await page.fill('#code-import', codeAbonnement('carnet.chiffre.json', cle, 'patient'));
+  await page.click('button[data-action="importer-code"]'); await page.waitForTimeout(1500);
+  verifier((await page.locator('main').innerText()).includes('Mises à jour automatiques activées'), 'abonnement activé (patient)');
+  verifier(!(await page.locator('#bandeau-demo').isVisible()), 'données reçues et déchiffrées');
+  const v2 = JSON.parse(JSON.stringify(v1)); v2.rendez_vous[2].titre = 'Prise de sang MISE À JOUR';
+  fs.writeFileSync(path.join(dossierAbo, 'carnet.chiffre.json'), JSON.stringify(await chiffrer(v2, cle, '2026-10-07T08:00:00Z')));
+  await page.goto(urlAbo + '#/accueil'); await page.reload(); await page.waitForTimeout(2000);
+  verifier((await page.locator('main').innerText()).includes('Prise de sang MISE À JOUR'), 'nouvelle version reçue automatiquement à l’ouverture');
+  await page.goto(urlAbo + '#/prises');
+  verifier((await page.locator('main input[type="checkbox"]').count()) > 0, 'patient : cases à cocher présentes');
+  await contexte.setOffline(true); await page.reload(); await page.waitForTimeout(800);
+  verifier((await page.locator('main').innerText()).includes('Médicament DÉMO A'), 'hors connexion : dernières données utilisées');
+  await contexte.setOffline(false);
+  verifier(erreurs.length === 0, 'aucune erreur JavaScript (abonnement patient)' + (erreurs.length ? ' : ' + erreurs.join(' | ') : ''));
+  await contexte.close();
+  ({ contexte, page, erreurs } = await nouvellePage());
+  await page.goto(urlAbo + '#/donnees');
+  await page.fill('#code-import', codeAbonnement('carnet.chiffre.json', cle, 'proche'));
+  await page.click('button[data-action="importer-code"]'); await page.waitForTimeout(1500);
+  verifier((await page.locator('#bandeau-proche').innerText()).includes('mise à jour automatique'), 'proche : bandeau « mise à jour automatique »');
+  await page.goto(urlAbo + '#/prises');
+  verifier((await page.locator('main input[type="checkbox"]').count()) === 0, 'proche : aucune case à cocher');
+  const v3 = JSON.parse(JSON.stringify(v1));
+  fs.writeFileSync(path.join(dossierAbo, 'carnet.chiffre.json'), JSON.stringify(await chiffrer(v3, nouvelleCle(), '2026-10-08T08:00:00Z')));
+  await page.reload(); await page.waitForTimeout(1500);
+  verifier((await page.locator('#bandeau-erreur').innerText()).includes('nouveau code'), 'clé changée : message clair, anciennes données conservées');
+  verifier(erreurs.length === 0, 'aucune erreur JavaScript (abonnement proche)' + (erreurs.length ? ' : ' + erreurs.join(' | ') : ''));
+  await contexte.close();
+  srv.close();
+}
 
 console.log('11. Affichage ordinateur');
 ({ contexte, page, erreurs } = await nouvellePage({ ...devices['Desktop Chrome'], viewport: { width: 1280, height: 900 } }));

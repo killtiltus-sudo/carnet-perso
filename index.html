@@ -33,7 +33,7 @@
   --alerte: #8A5300; --alerte-fond: #FFF1D6;
   --danger: #B42318; --danger-fond: #FDE8E6; --compte-texte: #FFFFFF; --demo: #7D1670; --demo-fond: #FBE4F7;
   --t-consultation: #1F5FBF; --t-prise_de_sang: #C0392B; --t-chimiotherapie: #5B3CC4; --t-immunotherapie: #157A4A;
-  --t-radiotherapie: #A8650F; --t-imagerie: #0E7C86; --t-autre: #5A6678;
+  --t-radiotherapie: #A8650F; --t-imagerie: #0E7C86; --t-soin_domicile: #B0306A; --t-autre: #5A6678;
   --rayon: 20px; --ombre: 0 1px 3px rgba(16,33,58,.06), 0 6px 20px rgba(16,33,58,.05);
 }
 /* Thème sombre : automatique (réglage de l'iPhone) ou choisi dans « Plus » */
@@ -48,7 +48,7 @@
     --alerte: #F2C46B; --alerte-fond: #3A2B0E;
     --danger: #FF9B91; --danger-fond: #3D1613; --compte-texte: #2A0B08; --demo: #F6A5EA; --demo-fond: #3A1335;
     --t-consultation: #7AB0FF; --t-prise_de_sang: #F07B6E; --t-chimiotherapie: #B9A2FF; --t-immunotherapie: #5FD3A6;
-    --t-radiotherapie: #F0B955; --t-imagerie: #4FD1C5; --t-autre: #A0AEC0;
+    --t-radiotherapie: #F0B955; --t-imagerie: #4FD1C5; --t-soin_domicile: #F48FB1; --t-autre: #A0AEC0;
     --ombre: none;
   }
 }
@@ -62,7 +62,7 @@
   --alerte: #F2C46B; --alerte-fond: #3A2B0E;
   --danger: #FF9B91; --danger-fond: #3D1613; --compte-texte: #2A0B08; --demo: #F6A5EA; --demo-fond: #3A1335;
   --t-consultation: #7AB0FF; --t-prise_de_sang: #F07B6E; --t-chimiotherapie: #B9A2FF; --t-immunotherapie: #5FD3A6;
-  --t-radiotherapie: #F0B955; --t-imagerie: #4FD1C5; --t-autre: #A0AEC0;
+  --t-radiotherapie: #F0B955; --t-imagerie: #4FD1C5; --t-soin_domicile: #F48FB1; --t-autre: #A0AEC0;
   --ombre: none;
 }
 * { box-sizing: border-box; }
@@ -479,6 +479,25 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
    "source": "Ordonnance fictive de démonstration"
   },
   {
+   "id": "med-demo-f",
+   "nom": "Injection DÉMO F (fictif)",
+   "dose": "1 injection (exemple fictif)",
+   "voie": "sous-cutanée, par infirmier à domicile (fictif)",
+   "horaires": [
+    "09:00"
+   ],
+   "dates": [
+    "2026-10-10",
+    "2026-10-11",
+    "2026-10-12"
+   ],
+   "au_calendrier": true,
+   "calendrier_titre": "Injection DÉMO à domicile (fictif)",
+   "calendrier_lieu": "À domicile",
+   "statut": "confirme",
+   "source": "Ordonnance fictive de démonstration"
+  },
+  {
    "id": "med-demo-d",
    "nom": "Médicament DÉMO D (fictif)",
    "dose": "? (illisible sur l'ordonnance)",
@@ -588,7 +607,7 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
 
 // ---------- Constantes ----------
 const PREFIXE = 'mesSoins.v1.';
-const VERSION_APP = '1.6 — 06/10/2026';
+const VERSION_APP = '1.8 — 06/10/2026';
 const MESSAGE_AUCUNE_CONSIGNE = 'Aucune consigne confirmée dans les documents enregistrés. Contacte ton équipe soignante ou ton pharmacien.';
 const TYPES_RDV = {
   consultation: 'Consultation',
@@ -597,6 +616,7 @@ const TYPES_RDV = {
   immunotherapie: 'Immunothérapie',
   radiotherapie: 'Radiothérapie',
   imagerie: 'Imagerie',
+  soin_domicile: 'Soin à domicile',
   autre: 'Autre rendez-vous'
 };
 const TYPES_TRAITEMENT = ['chimiotherapie', 'immunotherapie', 'radiotherapie'];
@@ -821,6 +841,23 @@ function rdvAVenir(maintenant, filtre) {
 }
 // Rendez-vous non confirmés mais datés : visibles dans le calendrier avec la mention « À confirmer ».
 const rdvDatesNonConfirmes = () => D.rendezVous.filter(r => !r._confirme && r._dateOK);
+// Médicaments marqués « au_calendrier » (ex. injections faites à domicile) : affichés aussi dans le calendrier.
+function soinsDomicile() {
+  const out = [];
+  D.medicaments.filter(m => m._confirme && m.au_calendrier === true).forEach(m => {
+    const jours = Array.isArray(m.dates) ? m.dates.slice() : [];
+    if (!Array.isArray(m.dates)) {
+      const fin = m.date_fin || ajouterJours(dateVersIso(new Date()), 180);
+      for (let d = m.date_debut; d <= fin; d = ajouterJours(d, 1)) if (medActifLe(m, d)) jours.push(d);
+    }
+    jours.forEach(d => m.horaires.forEach(h => out.push({
+      _id: `soin-${m._id}-${d}-${h.replace(':', '')}`, _type: 'soin_domicile', _confirme: true, _dateOK: true, _heureOK: true, _duree: 15, _virtuel: true,
+      titre: m.calendrier_titre || m.nom, date: d, heure: h, lieu: m.calendrier_lieu || '',
+      notes: `Dose prescrite : ${m.dose}${m.nom_boite ? ` · Boîte : ${m.nom_boite}` : ''}`, source: m.source
+    })));
+  });
+  return out;
+}
 
 function medActifLe(m, iso) {
   if (Array.isArray(m.dates)) return m.dates.includes(iso);
@@ -874,6 +911,7 @@ const ICONES_TYPE = {
   immunotherapie: '<rect x="7" y="2" width="10" height="12" rx="2"></rect><path d="M12 14v3a4 4 0 0 0 4 4h2"></path><path d="M10 6h4M10 9h4"></path>',
   radiotherapie: '<circle cx="12" cy="12" r="2"></circle><path d="M12 4a8 8 0 0 1 6.9 4M5.1 8A8 8 0 0 1 12 4M8 18.9a8 8 0 0 0 8 0"></path>',
   imagerie: '<rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="12" cy="12" r="4"></circle>',
+  soin_domicile: '<path d="M18 2l4 4"></path><path d="M17 7l3-3"></path><path d="M19 9l-9 9H6v-4l9-9z"></path><path d="M6 18l-4 4"></path><path d="M11 10l3 3"></path>',
   autre: '<rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path>'
 };
 function iconeType(type) {
@@ -904,7 +942,7 @@ function carteRdv(r, options = {}) {
   const quand = `${jourLong(r.date)}${r._heureOK ? ' à ' + heureFr(r.heure) : ''}`;
   const heureMq = !r._heureOK ? '<div><strong>Heure à confirmer</strong></div>' : '';
   let actions = '';
-  if (r._confirme && options.actions !== false && !D.lectureSeule) {
+  if (r._confirme && options.actions !== false && !D.lectureSeule && !r._virtuel) {
     const passe = rdvDebut(r) <= new Date();
     if (realises[r._id]) actions = `<div class="ligne-actions"><span class="badge ok">Réalisé</span><button class="secondaire petit" data-action="annuler-realise" data-id="${esc(r._id)}">Annuler « réalisé »</button></div>`;
     else if (passe) actions = `<div class="ligne-actions"><button class="secondaire petit" data-action="marquer-realise" data-id="${esc(r._id)}">Marquer comme réalisé</button></div>`;
@@ -982,7 +1020,7 @@ function vueAccueil() {
   else if (suivante) { l1 = `Prochaine : ${heureFr(suivante.heure)}`; l2 = suivante.med.nom; }
   else l1 = lecture ? 'Plus de prise prévue aujourd’hui' : `${faites} prise${faites > 1 ? 's' : ''} cochée${faites > 1 ? 's' : ''} sur ${prises.length}`;
   const lundi = ajouterJours(auj, -((isoVersDate(auj).getDay() + 6) % 7));
-  const tousRdv = rdvConfirmes().concat(rdvDatesNonConfirmes());
+  const tousRdv = rdvConfirmes().concat(rdvDatesNonConfirmes(), soinsDomicile());
   const semaine = [0, 1, 2, 3, 4, 5, 6].map(i => {
     const iso = ajouterJours(lundi, i); const d = isoVersDate(iso);
     const l = tousRdv.filter(r => r.date === iso);
@@ -1024,7 +1062,7 @@ function vueCalendrier() {
   const auj = dateVersIso(new Date());
   if (!etat.mois) { const d = new Date(); etat.mois = new Date(d.getFullYear(), d.getMonth(), 1); }
   if (!etat.jourSel) etat.jourSel = auj;
-  const tous = rdvConfirmes().concat(rdvDatesNonConfirmes());
+  const tous = rdvConfirmes().concat(rdvDatesNonConfirmes(), soinsDomicile());
   const typesPresents = Object.keys(TYPES_RDV).filter(t => tous.some(r => r._type === t));
   if (!etat.filtres) etat.filtres = new Set(Object.keys(TYPES_RDV));
   const visibles = tous.filter(r => etat.filtres.has(r._type));
@@ -1308,8 +1346,8 @@ function vueDonnees() {
   <div class="ligne-actions"><label class="bouton" for="fichier-donnees">Choisir mon fichier de données…</label></div>
   <input type="file" id="fichier-donnees" class="sr">
   <p class="meta">Sur iPhone : choisis « Parcourir », puis l’emplacement où tu as enregistré <code>donnees_medicales.json</code> (par exemple « Sur mon iPhone » ou « Téléchargements »).</p>
-  <h3 style="margin-top:18px">Ou coller un code d’import</h3>
-  <p class="meta">Un code commençant par « MS1: » contient tes données compressées. Il est décodé uniquement sur cet appareil.</p>
+  <h3 style="margin-top:18px">Ou coller un code</h3>
+  <p class="meta">« MS1: » : données compressées (copie figée). « MS2: » : abonnement aux mises à jour automatiques. Dans les deux cas, tout est décodé uniquement sur cet appareil.</p>
   <label class="sr" for="code-import">Code d’import</label>
   <textarea id="code-import" rows="4" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Colle ici le code MS1:…"></textarea>
   <div class="ligne-actions"><button data-action="importer-code">Importer le code</button></div>
@@ -1317,6 +1355,13 @@ function vueDonnees() {
     <button class="secondaire" data-action="modele">Télécharger le modèle (données fictives)</button>
     ${SOURCE.type === 'import' ? '<button class="secondaire" data-action="revenir-demo">Revenir aux données de démonstration</button>' : ''}
   </div>
+
+  <h2>Mises à jour automatiques</h2>
+  ${(() => { const ab = stock.lire('abonnement', null); if (!ab) return '<p class="meta">Pour les activer, colle un code d’abonnement « MS2: » dans le champ ci-dessus. Les données sont publiées chiffrées et déchiffrées uniquement sur cet appareil.</p>';
+    const f = s => s ? fmtHorodatage.format(new Date(s)) : '—';
+    return `<div class="encadre ${ab.erreur ? 'alerte' : 'ok'}"><p><strong>Activées</strong>${ab.role === 'proche' ? ' — mode proche (lecture seule)' : ''}.</p>
+      <p class="meta">Dernière vérification : ${esc(f(ab.derniereVerif))} · données publiées le ${esc(f(ab.derniereMaj))}</p>${ab.erreur ? `<p>${esc(ab.erreur)}</p>` : ''}</div>
+      <div class="ligne-actions"><button class="secondaire" data-action="synchroniser">Vérifier maintenant</button><button class="danger" data-action="desabonner">Désactiver</button></div>`; })()}
 
   <h2>Sauvegarde de mon suivi</h2>
   <p>Les cases cochées et les rendez-vous réalisés sont enregistrés dans ce navigateur. Fais une sauvegarde de temps en temps : vider les données du navigateur les efface.</p>
@@ -1382,11 +1427,13 @@ function rendre(nav) {
 }
 function afficherBandeaux() {
   document.getElementById('bandeau-demo').hidden = !D.fictif;
-  const bp = document.getElementById('bandeau-proche');
-  bp.hidden = !D.lectureSeule;
-  if (D.lectureSeule) bp.textContent = `Mode proche — lecture seule${D.meta && D.meta.derniere_mise_a_jour ? ` · données du ${D.meta.derniere_mise_a_jour.split('-').reverse().join('/')}` : ''}`;
   const be = document.getElementById('bandeau-erreur');
   be.hidden = !ERREUR_CHARGEMENT; be.textContent = ERREUR_CHARGEMENT;
+  const bp = document.getElementById('bandeau-proche');
+  bp.hidden = !D.lectureSeule;
+  if (D.lectureSeule) bp.textContent = `Mode proche — lecture seule${D.meta && D.meta.derniere_mise_a_jour ? ` · données du ${D.meta.derniere_mise_a_jour.split('-').reverse().join('/')}` : ''}${SOURCE.abonnement ? ' · mise à jour automatique' : ''}`;
+  const abE = stock.lire('abonnement', null);
+  if (!ERREUR_CHARGEMENT && abE && abE.erreurCle) { be.hidden = false; be.textContent = abE.erreur; }
   document.getElementById('bandeau-stockage').hidden = stockageOK;
 }
 
@@ -1444,7 +1491,9 @@ document.addEventListener('click', ev => {
   else if (a === 'effacer-symptome') { etat.symptome = ''; etat.saisieSymptome = ''; rendre(false); document.getElementById('sel-symptome').focus(); }
   else if (a === 'importer-code') {
     const zone = document.getElementById('code-import');
-    decoderCodeImport(zone ? zone.value : '')
+    const valeur = zone ? zone.value.trim() : '';
+    if (valeur.startsWith('MS2:')) { activerAbonnement(valeur); return; }
+    decoderCodeImport(valeur)
       .then(texte => importerTexte(texte, 'code d’import'))
       .catch(e => { etat.rapportImport = { ok: false, html: `<p><strong>Import refusé :</strong> ${esc(e.message)}</p><p>Tes données précédentes sont conservées.</p>` }; rendre(false); });
   }
@@ -1452,7 +1501,9 @@ document.addEventListener('click', ev => {
   else if (a === 'permission-notif') { Notification.requestPermission().then(() => rendre(false)); }
   else if (a === 'test-rappel') afficherRappel('test', 'Rappel de test', 'Voici à quoi ressemble un rappel à l’écran. Il ne s’affiche que si l’application est ouverte.');
   else if (a === 'modele') telecharger('donnees_medicales.exemple.json', JSON.stringify(JSON.parse(document.getElementById('donnees-demo').textContent), null, 2), 'application/json');
-  else if (a === 'revenir-demo') { if (confirm('Revenir aux données fictives de démonstration ? Ton fichier importé sera retiré de cet appareil (tes coches sont conservées).')) { stock.supprimer('donneesImportees'); etat.rapportImport = null; chargerDonnees().then(() => rendre(false)); } }
+  else if (a === 'synchroniser') { synchroniser(true); }
+  else if (a === 'desabonner') { if (confirm('Désactiver les mises à jour automatiques ? Les dernières données reçues restent sur cet appareil.')) { stock.supprimer('abonnement'); etat.rapportImport = null; chargerDonnees().then(() => rendre(false)); } }
+  else if (a === 'revenir-demo') { if (confirm('Revenir aux données fictives de démonstration ? Ton fichier importé sera retiré de cet appareil (tes coches sont conservées).')) { stock.supprimer('donneesImportees'); stock.supprimer('abonnement'); etat.rapportImport = null; chargerDonnees().then(() => rendre(false)); } }
   else if (a === 'sauvegarder') {
     const s = { type: 'sauvegarde-mes-soins', version: 1, creeLe: new Date().toISOString(), prises: lirePrises(), realises: lireRealises(), reglages };
     telecharger(`sauvegarde-mes-soins-${dateVersIso(new Date())}.json`, JSON.stringify(s, null, 2), 'application/json');
@@ -1536,13 +1587,97 @@ async function importerTexte(texte, nomSource) {
     etat.rapportImport = { ok: false, html: `<p><strong>Import refusé :</strong> structure non reconnue.</p><ul class="raisons">${V.structure.map(s => `<li>${esc(s)}</li>`).join('')}</ul><p>Tes données précédentes sont conservées.</p>` };
     rendre(false); return;
   }
+  const etaitAbonne = !!stock.lire('abonnement', null);
+  stock.supprimer('abonnement');
   if (!stock.ecrire('donneesImportees', { json: brut, nomFichier: fichier.name, importeLe: new Date().toISOString() })) {
     etat.rapportImport = { ok: false, html: '<p><strong>Import impossible :</strong> le stockage local est indisponible ou plein.</p>' };
     rendre(false); return;
   }
   await chargerDonnees();
-  etat.rapportImport = { ok: true, html: `<p><strong>Import réussi</strong> (« ${esc(fichier.name)} »).</p>${resumeValidation(D)}${nbAConfirmer() ? '<p><a href="#/a-confirmer">Voir les éléments à confirmer</a></p>' : ''}${SOURCE.type === 'fichier' ? '<p>Attention : le fichier servi à côté de l’application reste prioritaire.</p>' : ''}` };
+  etat.rapportImport = { ok: true, html: `<p><strong>Import réussi</strong> (« ${esc(fichier.name)} »).</p>${resumeValidation(D)}${nbAConfirmer() ? '<p><a href="#/a-confirmer">Voir les éléments à confirmer</a></p>' : ''}${SOURCE.type === 'fichier' ? '<p>Attention : le fichier servi à côté de l’application reste prioritaire.</p>' : ''}${etaitAbonne ? '<p>Les mises à jour automatiques ont été désactivées, puisque tu as importé des données à la main.</p>' : ''}` };
   rendre(false);
+}
+
+// ---------- Abonnement : données chiffrées, mises à jour automatiquement ----------
+// Le fichier publié est chiffré (AES-256-GCM). Il n'est déchiffré que sur l'appareil, avec la clé
+// contenue dans le code d'abonnement « MS2: » (jamais publiée).
+function b64Octets(s) { return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
+let cacheCle = null;
+async function cleDechiffrement(cle, selB64, iterations) {
+  const id = `${cle}|${selB64}|${iterations}`;
+  if (cacheCle && cacheCle.id === id) return cacheCle.cle;
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(cle), 'PBKDF2', false, ['deriveKey']);
+  const derivee = await crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: b64Octets(selB64), iterations }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+  cacheCle = { id, cle: derivee };
+  return derivee;
+}
+async function dechiffrerEnveloppe(env, cle) {
+  if (!env || env.format !== 'mes-soins-chiffre' || env.v !== 1) throw new Error('Fichier de mise à jour non reconnu.');
+  const k = await cleDechiffrement(cle, env.sel, env.iterations);
+  let clair;
+  try { clair = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64Octets(env.iv) }, k, b64Octets(env.donnees)); }
+  catch (e) { const err = new Error('La clé ne correspond plus aux données publiées : demande un nouveau code d’abonnement.'); err.cle = true; throw err; }
+  const contenu = JSON.parse(new TextDecoder().decode(clair));
+  if (!contenu || typeof contenu.maj !== 'string' || !contenu.donnees) throw new Error('Contenu de la mise à jour invalide.');
+  return contenu;
+}
+function decoderCodeAbonnement(texte) {
+  const m = String(texte).replace(/\s+/g, '').match(/^MS2:([A-Za-z0-9_\-+/=]+)$/);
+  if (!m) throw new Error('Code d’abonnement non reconnu.');
+  const json = JSON.parse(new TextDecoder().decode(b64Octets(m[1].replace(/-/g, '+').replace(/_/g, '/'))));
+  if (!json || typeof json.f !== 'string' || typeof json.k !== 'string' || !/^[A-Za-z0-9._-]+\.chiffre\.json$/.test(json.f)) throw new Error('Code d’abonnement incomplet.');
+  return { fichier: json.f, cle: json.k, role: json.r === 'proche' ? 'proche' : 'patient' };
+}
+async function activerAbonnement(code) {
+  let ab;
+  try {
+    if (!window.crypto || !crypto.subtle) throw new Error('Les mises à jour automatiques nécessitent l’adresse en ligne de l’application (https).');
+    ab = decoderCodeAbonnement(code);
+  } catch (e) {
+    etat.rapportImport = { ok: false, html: `<p><strong>Abonnement refusé :</strong> ${esc(e.message)}</p><p>Tes données précédentes sont conservées.</p>` };
+    rendre(false); return;
+  }
+  const resultat = await synchroniser(true, ab);
+  if (resultat.ok) {
+    etat.rapportImport = { ok: true, html: `<p><strong>Mises à jour automatiques activées</strong>${ab.role === 'proche' ? ' (mode proche, lecture seule)' : ''}.</p>${resumeValidation(D)}<p>L’application vérifiera les nouveautés à chaque ouverture.</p>` };
+  } else {
+    stock.supprimer('abonnement');
+    etat.rapportImport = { ok: false, html: `<p><strong>Abonnement impossible :</strong> ${esc(resultat.erreur)}</p><p>Tes données précédentes sont conservées.</p>` };
+  }
+  rendre(false);
+}
+let syncEnCours = false;
+async function synchroniser(manuel, nouvelAbonnement) {
+  const ab = nouvelAbonnement || stock.lire('abonnement', null);
+  if (!ab || syncEnCours) return { ok: false, erreur: 'Aucun abonnement.' };
+  syncEnCours = true;
+  try {
+    if (!window.crypto || !crypto.subtle) throw new Error('Mises à jour automatiques indisponibles ici (adresse https nécessaire).');
+    const rep = await fetch(`${ab.fichier}?t=${Date.now()}`, { cache: 'no-store' });
+    if (!rep.ok) throw new Error(`Fichier de mise à jour introuvable (erreur ${rep.status}).`);
+    const contenu = await dechiffrerEnveloppe(await rep.json(), ab.cle);
+    const V = validerDonnees(contenu.donnees);
+    if (V.structure.length && !V.rendezVous.length && !V.medicaments.length) throw new Error('Données de la mise à jour illisibles.');
+    const ancien = stock.lire('donneesImportees', null);
+    const nouveau = !ancien || ancien.maj !== contenu.maj || !!nouvelAbonnement;
+    Object.assign(ab, { derniereVerif: new Date().toISOString(), erreur: '', derniereMaj: contenu.maj });
+    stock.ecrire('abonnement', ab);
+    if (nouveau) {
+      stock.ecrire('donneesImportees', { json: contenu.donnees, nomFichier: 'mise à jour automatique', importeLe: new Date().toISOString(), maj: contenu.maj });
+      await chargerDonnees();
+      if (!nouvelAbonnement) { rendre(false); annoncer('Données mises à jour.'); }
+    } else if (manuel) rendre(false);
+    return { ok: true };
+  } catch (e) {
+    const hors = !navigator.onLine || e instanceof TypeError;
+    const msg = hors ? 'Pas de connexion : les dernières données reçues sont utilisées.' : e.message;
+    if (!nouvelAbonnement) {
+      Object.assign(ab, { derniereVerif: new Date().toISOString(), erreur: msg, erreurCle: !!e.cle });
+      stock.ecrire('abonnement', ab);
+      if (manuel || e.cle) { afficherBandeaux(); rendre(false); }
+    }
+    return { ok: false, erreur: msg };
+  } finally { syncEnCours = false; }
 }
 async function restaurerSauvegarde(fichier) {
   try {
@@ -1575,7 +1710,7 @@ function genererIcs(quoi, maintenant = new Date()) {
   const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Mes soins//Application locale//FR', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:Mes soins'];
   let nb = 0;
   if (quoi === 'tout' || quoi === 'rdv') {
-    rdvConfirmes().filter(x => rdvFin(x) > maintenant).forEach(x => {
+    rdvConfirmes().concat(quoi === 'rdv' ? soinsDomicile() : []).filter(x => rdvFin(x) > maintenant).forEach(x => {
       const titre = masque ? 'Rendez-vous médical' : x.titre;
       const desc = masque ? 'Détails dans l’application Mes soins.'
         : [`Type : ${TYPES_RDV[x._type]}`, x.professionnel && `Avec : ${x.professionnel}`, x.notes && `Note : ${x.notes}`, x.source && `Source : ${x.source}`, 'Exporté depuis Mes soins (données confirmées).'].filter(Boolean).join('\n');
@@ -1713,6 +1848,8 @@ async function chargerDonnees() {
   if (!brut) { brut = JSON.parse(document.getElementById('donnees-demo').textContent); SOURCE = { type: 'demo' }; }
   D = validerDonnees(brut);
   if (SOURCE.type === 'demo') D.fictif = true;
+  const abo = stock.lire('abonnement', null);
+  if (abo && SOURCE.type === 'import') { SOURCE.abonnement = abo; if (abo.role === 'proche') D.lectureSeule = true; }
 }
 
 let jourAffiche = dateVersIso(new Date());
@@ -1723,13 +1860,19 @@ function tic() {
 }
 
 window.addEventListener('hashchange', () => rendre(true));
-document.addEventListener('visibilitychange', () => { if (!document.hidden) tic(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  tic();
+  const ab = stock.lire('abonnement', null);
+  if (ab && (!ab.derniereVerif || Date.now() - new Date(ab.derniereVerif).getTime() > 5 * 60000)) synchroniser(false);
+});
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || estServeurLocal())) {
   navigator.serviceWorker.register('sw.js').catch(() => { /* fonctionnement en ligne uniquement */ });
 }
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 chargerDonnees().then(() => {
   rendre(false);
+  synchroniser(false);
   tic();
   setInterval(tic, 30000);
 });

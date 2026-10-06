@@ -97,6 +97,8 @@ Chaque élément a un `id` unique et un `statut` : **`confirme`** ou **`a_confir
 | `dates` | non : liste de jours précis, à la place de début/fin | `["2026-10-08", "2026-10-09"]` |
 | `consignes_prise` | non | `"Pendant le repas"` |
 | `nom_boite`, `nom_boite_source` | non | Nom écrit sur ta boîte (générique ou marque) et d'où vient l'association : `"ONDANSETRON"`, `"Tableau de cure"` |
+| `au_calendrier` | non | `true` : affiche aussi chaque prise dans le calendrier comme « Soin à domicile » (ex. injection par l'infirmier) |
+| `calendrier_titre`, `calendrier_lieu` | non | Titre et lieu affichés dans le calendrier |
 | `source` | conseillé | `"Ordonnance du 17/09/2026"` |
 
 Les médicaments « si besoin », sans horaire fixe, se notent plutôt dans `consignes_symptomes`.
@@ -175,6 +177,16 @@ Ajoute `"lecture_seule": true` dans la section `meta` d'une copie du fichier de 
 - l'export calendrier ne contient que les rendez-vous.
 
 Pour que tes proches aient des informations à jour, envoie-leur un nouveau code à chaque changement. Utilise uniquement une messagerie chiffrée (iMessage, WhatsApp, Signal) : le code contient des données de santé.
+
+## 4 ter. Mises à jour automatiques (données chiffrées)
+Le fichier `carnet.chiffre.json` contient les données **chiffrées** (AES-256-GCM, clé dérivée par PBKDF2-SHA256). Il est illisible sans la clé, et **la clé n'est jamais publiée** : elle se trouve uniquement dans les codes d'abonnement « MS2: », à transmettre par messagerie chiffrée.
+
+- **Code patient** : mises à jour automatiques, avec les cases à cocher.
+- **Code proche** : mises à jour automatiques, en lecture seule.
+
+À chaque ouverture (avec réseau), l'application télécharge le fichier, le déchiffre sur l'appareil et applique la nouvelle version. Hors connexion, elle utilise les dernières données reçues.
+
+Pour publier une nouvelle version : `MES_SOINS_CLE=… node outils/chiffrer.mjs chiffrer donnees_medicales.json carnet.chiffre.json`, puis enregistrer et pousser `carnet.chiffre.json`. Si un code fuite : générer une nouvelle clé (`node outils/chiffrer.mjs nouvelle-cle`), rechiffrer et distribuer les nouveaux codes ; les anciens deviennent inutiles.
 
 ## 5. Vérification automatique (facultatif)
 Si Node.js est installé : `npm i -D playwright`, puis `node outils/verifier-parcours.mjs`.

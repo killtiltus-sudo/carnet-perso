@@ -159,6 +159,19 @@
       "source": "Ordonnance fictive de démonstration"
     },
     {
+      "id": "med-demo-f",
+      "nom": "Injection DÉMO F (fictif)",
+      "dose": "1 injection (exemple fictif)",
+      "voie": "sous-cutanée, par infirmier à domicile (fictif)",
+      "horaires": ["09:00"],
+      "dates": ["2026-10-10", "2026-10-11", "2026-10-12"],
+      "au_calendrier": true,
+      "calendrier_titre": "Injection DÉMO à domicile (fictif)",
+      "calendrier_lieu": "À domicile",
+      "statut": "confirme",
+      "source": "Ordonnance fictive de démonstration"
+    },
+    {
       "id": "med-demo-d",
       "nom": "Médicament DÉMO D (fictif)",
       "dose": "? (illisible sur l'ordonnance)",
