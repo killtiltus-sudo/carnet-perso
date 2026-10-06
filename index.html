@@ -112,6 +112,8 @@ legend { font-weight: 700; padding: 0 6px; }
 .prise .heure { font-weight: 800; font-size: 18px; white-space: nowrap; }
 .prise .nom { font-weight: 700; }
 .prise .dose { margin-top: 2px; }
+.nom_boite { font-size: 15px; color: var(--texte-2); margin-top: 1px; }
+.nom_boite strong { color: var(--texte); }
 .case-pris { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 14px; font-weight: 700; cursor: pointer; min-width: 52px; }
 .case-pris input { width: 30px; height: 30px; margin: 0; accent-color: var(--ok); cursor: pointer; }
 .case-pris input:disabled { cursor: not-allowed; }
@@ -346,6 +348,8 @@ nav.principale .badge.compte { position: absolute; top: 4px; left: 55%; }
   {
    "id": "med-demo-a",
    "nom": "Médicament DÉMO A (fictif)",
+   "nom_boite": "GÉNÉRIQUE DÉMO A (fictif)",
+   "nom_boite_source": "Exemple fictif",
    "dose": "1 comprimé (exemple fictif)",
    "voie": "orale",
    "horaires": [
@@ -668,6 +672,7 @@ function validerDonnees(brut) {
       if (!Array.isArray(m.jours) || m.jours.length === 0) pb.push('Liste « jours » vide ou invalide.');
       else m.jours.forEach(j => { if (!JOURS.includes(String(j).toLowerCase())) pb.push(`Jour inconnu « ${String(j)} » (attendu : lundi, mardi…).`); });
     }
+    if (m.nom_boite !== undefined && typeof m.nom_boite !== 'string') R.avertissements.push(`Médicament « ${c.id} » : « nom_boite » doit être un texte ; ignoré.`);
     if (texteManquant(m.source)) R.avertissements.push(`Médicament « ${c.id} » : source (ordonnance) non renseignée.`);
     R.medicaments.push(finir(c, m, pb, {}));
   });
@@ -687,6 +692,7 @@ function validerDonnees(brut) {
       if (Array.isArray(s.synonymes) && s.synonymes.every(x => typeof x === 'string')) syn = s.synonymes;
       else R.avertissements.push(`Consigne « ${c.id} » : « synonymes » doit être une liste de textes ; ignoré.`);
     }
+    if (s.nom_boite !== undefined && typeof s.nom_boite !== 'string') R.avertissements.push(`Consigne « ${c.id} » : « nom_boite » doit être un texte ; ignoré.`);
     R.consignes.push(finir(c, s, pb, { _synonymes: syn, _aMedicament: aMed }));
   });
 
@@ -774,6 +780,10 @@ function listeSymptomesSelection() {
 
 // ---------- Composants ----------
 function chipType(type) { return `<span class="type" style="--tc:var(--t-${type})">${esc(TYPES_RDV[type])}</span>`; }
+function ligneNomBoite(x) {
+  if (typeof x.nom_boite !== 'string' || !x.nom_boite.trim()) return '';
+  return `<div class="nom-boite">Nom sur la boîte : <strong>${esc(x.nom_boite)}</strong>${x.nom_boite_source ? ` <span class="meta">(${esc(x.nom_boite_source)})</span>` : ''}</div>`;
+}
 function badgeStatut(x) {
   return x._confirme ? '<span class="badge ok">Confirmé</span>' : '<span class="badge alerte">À confirmer</span>';
 }
@@ -810,6 +820,7 @@ function lignePrise(p, prises, aujourdhui, prefixe) {
     <div class="heure">${esc(heureFr(p.heure))}</div>
     <div id="${esc(idInfo)}">
       <div class="nom">${esc(p.med.nom)}</div>
+      ${ligneNomBoite(p.med)}
       <div class="dose">Dose prescrite : <strong>${esc(p.med.dose)}</strong></div>
       ${p.med.consignes_prise ? `<div class="meta">Consigne de prise : ${esc(p.med.consignes_prise)}</div>` : ''}
       ${p.med.source ? `<div class="source">Source : ${esc(p.med.source)}</div>` : ''}
@@ -947,7 +958,7 @@ function vueSymptomes() {
           <h3>${esc(c.symptome)}</h3>
           ${!texteManquant(c.consigne) ? `<p class="texte-consigne">${esc(c.consigne)}</p>` : ''}
           <dl class="details">
-            ${c._aMedicament ? `<dt>Médicament</dt><dd>${esc(c.medicament)}</dd><dt>Posologie indiquée dans le document</dt><dd>${esc(c.posologie)}</dd>` : ''}
+            ${c._aMedicament ? `<dt>Médicament</dt><dd>${esc(c.medicament)}${ligneNomBoite(c)}</dd><dt>Posologie indiquée dans le document</dt><dd>${esc(c.posologie)}</dd>` : ''}
             <dt>Source</dt><dd>${esc(c.source)}</dd>
             ${c.date_document ? `<dt>Date du document</dt><dd>${esc(c.date_document)}</dd>` : ''}
           </dl>
@@ -1084,6 +1095,7 @@ function vueAConfirmer() {
     </article>`)}
   ${sec('Médicaments', e.meds, m => `<article class="carte">
       <h3>${esc(m.nom || '(nom manquant)')}</h3>
+      ${ligneNomBoite(m)}
       <p class="meta">Ce médicament n’apparaît pas dans l’agenda des prises et n’est pas exporté.</p>
       ${listeRaisons(m)}
       ${blocNonValide('Voir les valeurs enregistrées (non validées)', `<dl class="details">
@@ -1362,7 +1374,7 @@ function genererIcs(quoi, maintenant = new Date()) {
     D.medicaments.filter(m => m._confirme).forEach(m => {
       const titre = masque ? 'Prise de médicament' : `${m.nom} — ${m.dose}`;
       const desc = masque ? 'Détails dans l’application Mes soins.'
-        : [`Dose telle que prescrite : ${m.dose}`, m.consignes_prise && `Consigne de prise : ${m.consignes_prise}`, m.source && `Source : ${m.source}`, 'Rappel issu de l’ordonnance enregistrée (données confirmées).'].filter(Boolean).join('\n');
+        : [typeof m.nom_boite === 'string' && m.nom_boite.trim() && `Nom sur la boîte : ${m.nom_boite}`, `Dose telle que prescrite : ${m.dose}`, m.consignes_prise && `Consigne de prise : ${m.consignes_prise}`, m.source && `Source : ${m.source}`, 'Rappel issu de l’ordonnance enregistrée (données confirmées).'].filter(Boolean).join('\n');
       const evenement = (uid, debut, rrule) => {
         const fin = new Date(debut.getTime() + 15 * 60000);
         L.push('BEGIN:VEVENT', `UID:${uid}@mes-soins.local`, `DTSTAMP:${stamp}`, `DTSTART:${icsLocal(debut)}`, `DTEND:${icsLocal(fin)}`);

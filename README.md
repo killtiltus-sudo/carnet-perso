@@ -92,6 +92,7 @@ Chaque élément a un `id` unique et un `statut` : **`confirme`** ou **`a_confir
 | `jours` | non : limite à certains jours | `["lundi", "jeudi"]` |
 | `dates` | non : liste de jours précis, à la place de début/fin | `["2026-10-08", "2026-10-09"]` |
 | `consignes_prise` | non | `"Pendant le repas"` |
+| `nom_boite`, `nom_boite_source` | non | Nom écrit sur ta boîte (générique ou marque) et d'où vient l'association : `"ONDANSETRON"`, `"Tableau de cure"` |
 | `source` | conseillé | `"Ordonnance du 17/09/2026"` |
 
 Les médicaments « si besoin », sans horaire fixe, se notent plutôt dans `consignes_symptomes`.
@@ -106,6 +107,7 @@ Les médicaments « si besoin », sans horaire fixe, se notent plutôt dans `con
 | `medicament` + `posologie` | les deux ensemble, ou aucun | Posologie **telle qu'écrite** |
 | `source` | **oui** | Sans source, la consigne n'est jamais affichée |
 | `date_document` | non | `"2026-09-17"` |
+| `nom_boite`, `nom_boite_source` | non | Nom écrit sur la boîte du médicament indiqué, et sa source |
 
 **Autres sections** :
 - `liste_symptomes` : symptômes proposés dans la liste de recherche ;

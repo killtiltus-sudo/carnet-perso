@@ -49,6 +49,7 @@ verifier(accueil.includes('Prise de sang (DÉMO)') && accueil.includes('7 h 45')
 verifier(accueil.includes('Séance de chimiothérapie — cycle 2'), 'prochains traitements : chimiothérapie cycle 2');
 verifier((await page.locator('main .prise').count()) === 2, 'deux prises du jour (médicament A à 8 h et 20 h)');
 verifier(!accueil.includes('DÉMO D'), 'médicament D (dose « ? ») absent des prises');
+verifier(accueil.includes('Nom sur la boîte : GÉNÉRIQUE DÉMO A'), 'nom sur la boîte affiché avec la prise');
 await page.screenshot({ path: path.join(dossierCaptures, '1-accueil-iphone.png'), fullPage: true });
 
 console.log('2. Cocher une prise');

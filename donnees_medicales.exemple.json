@@ -124,6 +124,8 @@
     {
       "id": "med-demo-a",
       "nom": "Médicament DÉMO A (fictif)",
+      "nom_boite": "GÉNÉRIQUE DÉMO A (fictif)",
+      "nom_boite_source": "Exemple fictif",
       "dose": "1 comprimé (exemple fictif)",
       "voie": "orale",
       "horaires": ["08:00", "20:00"],
