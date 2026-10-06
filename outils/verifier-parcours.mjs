@@ -78,6 +78,7 @@ await page.goto(urlFichier + '#/calendrier');
 await page.locator('button[data-iso="2026-10-08"]').click();
 let cal = await page.locator('main').innerText();
 verifier(cal.includes('Séance de chimiothérapie — cycle 2'), 'chimiothérapie affichée le 8 octobre');
+verifier(/Chimiothérapie\s+Immunothérapie/.test(cal), 'séance chimiothérapie + immunothérapie : deux types affichés');
 await page.locator('button[data-iso="2026-10-20"]').click();
 cal = await page.locator('main').innerText();
 verifier(cal.includes('Scanner de contrôle') && cal.includes('Heure à confirmer') && cal.includes('À confirmer'), 'scanner sans heure affiché « À confirmer »');
@@ -90,6 +91,10 @@ await page.locator('button[data-iso="2026-11-05"]').click();
 verifier((await page.locator('main').innerText()).includes('cycle 3'), 'chimiothérapie cycle 3 le 5 novembre');
 await page.locator('input[data-type="chimiotherapie"]').uncheck();
 verifier(!(await page.locator('main').innerText()).includes('cycle 3'), 'filtre par type');
+await page.locator('button[data-action="mois"][data-delta="-1"]').click();
+await page.locator('button[data-iso="2026-10-08"]').click();
+verifier((await page.locator('main').innerText()).includes('cycle 2'), 'filtre : séance mixte visible via l’immunothérapie');
+await page.locator('input[data-type="chimiotherapie"]').check();
 await page.screenshot({ path: path.join(dossierCaptures, '3-calendrier-iphone.png'), fullPage: true });
 
 console.log('4b. Ajouter un rendez-vous (sur l’appareil)');

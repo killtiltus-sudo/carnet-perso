@@ -57,6 +57,7 @@
       "id": "rdv-demo-05",
       "type": "chimiotherapie",
       "titre": "Séance de chimiothérapie — cycle 2 (DÉMO)",
+      "types_associes": ["immunotherapie"],
       "date": "2026-10-08",
       "heure": "08:30",
       "duree_minutes": 360,

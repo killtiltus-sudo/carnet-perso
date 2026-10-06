@@ -81,6 +81,7 @@ Chaque élément a un `id` unique et un `statut` : **`confirme`** ou **`a_confir
 | `date` | oui | `"2026-10-08"` |
 | `heure` | oui | `"08:30"` |
 | `duree_minutes` | non (60 par défaut pour l'export) | `360` |
+| `types_associes` | non | Autres types de la même séance : `["immunotherapie"]` |
 | `lieu`, `professionnel`, `notes` | non | texte |
 | `source` | conseillé | `"Planning remis le 17/09"` |
 

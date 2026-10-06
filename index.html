@@ -367,6 +367,9 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
    "id": "rdv-demo-05",
    "type": "chimiotherapie",
    "titre": "Séance de chimiothérapie — cycle 2 (DÉMO)",
+   "types_associes": [
+    "immunotherapie"
+   ],
    "date": "2026-10-08",
    "heure": "08:30",
    "duree_minutes": 360,
@@ -607,7 +610,7 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
 
 // ---------- Constantes ----------
 const PREFIXE = 'mesSoins.v1.';
-const VERSION_APP = '1.9 — 06/10/2026';
+const VERSION_APP = '1.10 — 06/10/2026';
 const MESSAGE_AUCUNE_CONSIGNE = 'Aucune consigne confirmée dans les documents enregistrés. Contacte ton équipe soignante ou ton pharmacien.';
 const TYPES_RDV = {
   consultation: 'Consultation',
@@ -753,7 +756,12 @@ function validerDonnees(brut) {
       else R.avertissements.push(`Rendez-vous « ${c.id} » : durée invalide, 60 minutes utilisées pour l’export.`);
     }
     if (texteManquant(r.source)) R.avertissements.push(`Rendez-vous « ${c.id} » : source non renseignée.`);
-    R.rendezVous.push(finir(c, r, pb, { _type: type, _duree: duree, _dateOK: dateValide(r.date), _heureOK: heureValide(r.heure) }));
+    let associes = [];
+    if (r.types_associes !== undefined) {
+      if (Array.isArray(r.types_associes)) associes = [...new Set(r.types_associes.filter(x => Object.prototype.hasOwnProperty.call(TYPES_RDV, x) && x !== type))];
+      if (!Array.isArray(r.types_associes) || associes.length !== r.types_associes.filter(x => x !== type).length) R.avertissements.push(`Rendez-vous « ${c.id} » : « types_associes » contient un type inconnu ; ignoré.`);
+    }
+    R.rendezVous.push(finir(c, r, pb, { _type: type, _typesAssocies: associes, _duree: duree, _dateOK: dateValide(r.date), _heureOK: heureValide(r.heure) }));
   });
 
   liste('medicaments').forEach((m, i) => {
@@ -913,6 +921,8 @@ function listeSymptomesSelection() {
 }
 
 // ---------- Composants ----------
+const typesDe = r => [r._type].concat(r._typesAssocies || []);
+const libelleTypes = r => typesDe(r).map(t => TYPES_RDV[t]).join(' + ');
 function chipType(type) { return `<span class="type" style="--tc:var(--t-${type})"><span class="pastille" aria-hidden="true"></span>${esc(TYPES_RDV[type])}</span>`; }
 const ICONES_TYPE = {
   consultation: '<path d="M5 3v6a5 5 0 0 0 10 0V3"></path><path d="M10 14v2a5 5 0 0 0 10 0v-3"></path><circle cx="20" cy="11" r="2"></circle>',
@@ -935,7 +945,7 @@ function elementRdv(r, auj) {
   return `<a class="element" href="#/calendrier" data-action="voir-jour" data-iso="${r.date}" style="--tc:var(--t-${r._type})">
     <span class="icone">${iconeType(r._type)}</span>
     <span class="corps"><span class="titre" style="display:block">${esc(r.titre)}</span>
-      <span class="sous" style="display:block">${esc(TYPES_RDV[r._type])} · ${esc(jourCourt(r.date))} · ${esc(heureFr(r.heure))}</span></span>
+      <span class="sous" style="display:block">${esc(libelleTypes(r))} · ${esc(jourCourt(r.date))} · ${esc(heureFr(r.heure))}</span></span>
     <span class="delai">${esc(delaiJours(r.date, auj))}</span>
   </a>`;
 }
@@ -958,7 +968,7 @@ function carteRdv(r, options = {}) {
     else if (passe) actions = `<div class="ligne-actions"><button class="secondaire petit" data-action="marquer-realise" data-id="${esc(r._id)}">Marquer comme réalisé</button></div>`;
   }
   return `<article class="carte rdv${r._confirme ? '' : ' non-confirme'}">
-    <div>${chipType(r._type)} ${badgeStatut(r)}${r._perso ? ' <span class="badge" style="background:var(--surface-2);color:var(--texte-2)">Ajouté par toi</span>' : ''}</div>
+    <div>${typesDe(r).map(chipType).join(' ')} ${badgeStatut(r)}${r._perso ? ' <span class="badge" style="background:var(--surface-2);color:var(--texte-2)">Ajouté par toi</span>' : ''}</div>
     <h3>${esc(r.titre || '(sans titre)')}</h3>
     <div class="quand">${esc(quand)}</div>
     <div class="meta">${heureMq}
@@ -1015,7 +1025,7 @@ function vueAccueil() {
   const maintenant = new Date();
   const auj = dateVersIso(maintenant);
   const prochain = rdvAVenir(maintenant)[0];
-  const traitements = rdvAVenir(maintenant, r => TYPES_TRAITEMENT.includes(r._type)).slice(0, 3);
+  const traitements = rdvAVenir(maintenant, r => typesDe(r).some(x => TYPES_TRAITEMENT.includes(x))).slice(0, 3);
   const prises = prisesDuJour(auj);
   const lecture = D.lectureSeule;
   const etatP = lecture ? {} : lirePrises();
@@ -1074,9 +1084,9 @@ function vueCalendrier() {
   if (!etat.mois) { const d = new Date(); etat.mois = new Date(d.getFullYear(), d.getMonth(), 1); }
   if (!etat.jourSel) etat.jourSel = auj;
   const tous = rdvConfirmes().concat(rdvDatesNonConfirmes(), soinsDomicile());
-  const typesPresents = Object.keys(TYPES_RDV).filter(t => tous.some(r => r._type === t));
+  const typesPresents = Object.keys(TYPES_RDV).filter(t => tous.some(r => typesDe(r).includes(t)));
   if (!etat.filtres) etat.filtres = new Set(Object.keys(TYPES_RDV));
-  const visibles = tous.filter(r => etat.filtres.has(r._type));
+  const visibles = tous.filter(r => typesDe(r).some(x => etat.filtres.has(x)));
   const parJour = {};
   visibles.forEach(r => { (parJour[r.date] = parJour[r.date] || []).push(r); });
   Object.values(parJour).forEach(l => l.sort((a, b) => (a.heure || '99').localeCompare(b.heure || '99')));
@@ -1091,7 +1101,7 @@ function vueCalendrier() {
     const l = parJour[iso] || [];
     const classes = ['jour', iso === auj ? 'aujourdhui' : '', iso === etat.jourSel ? 'selectionne' : ''].join(' ');
     const label = `${jourLong(iso)} : ${l.length ? l.length + ' rendez-vous' : 'aucun rendez-vous'}${iso === auj ? ' (aujourd’hui)' : ''}`;
-    const points = l.slice(0, 4).map(r => `<span class="point${r._confirme ? '' : ' non-confirme'}" style="--tc:var(--t-${r._type})"></span>`).join('');
+    const points = l.flatMap(r => typesDe(r).map(x => `<span class="point${r._confirme ? '' : ' non-confirme'}" style="--tc:var(--t-${x})"></span>`)).slice(0, 4).join('');
     cellules.push(`<td><button class="${classes}" data-action="jour" data-iso="${iso}" aria-label="${esc(label)}" aria-pressed="${iso === etat.jourSel}">${j}<span class="points" aria-hidden="true">${points}</span></button></td>`);
   }
   while (cellules.length % 7) cellules.push('<td></td>');
@@ -1779,7 +1789,7 @@ function genererIcs(quoi, maintenant = new Date()) {
     rdvConfirmes().concat(quoi === 'rdv' ? soinsDomicile() : []).filter(x => rdvFin(x) > maintenant).forEach(x => {
       const titre = masque ? 'Rendez-vous médical' : x.titre;
       const desc = masque ? 'Détails dans l’application Mes soins.'
-        : [`Type : ${TYPES_RDV[x._type]}`, x.professionnel && `Avec : ${x.professionnel}`, x.notes && `Note : ${x.notes}`, x.source && `Source : ${x.source}`, 'Exporté depuis Mes soins (données confirmées).'].filter(Boolean).join('\n');
+        : [`Type : ${libelleTypes(x)}`, x.professionnel && `Avec : ${x.professionnel}`, x.notes && `Note : ${x.notes}`, x.source && `Source : ${x.source}`, 'Exporté depuis Mes soins (données confirmées).'].filter(Boolean).join('\n');
       L.push('BEGIN:VEVENT', `UID:rdv-${x._id}@mes-soins.local`, `DTSTAMP:${stamp}`, `DTSTART:${icsLocal(rdvDebut(x))}`, `DTEND:${icsLocal(rdvFin(x))}`,
         `SUMMARY:${icsTexte(titre)}`, `DESCRIPTION:${icsTexte(desc)}`);
       if (!masque && x.lieu) L.push(`LOCATION:${icsTexte(x.lieu)}`);
