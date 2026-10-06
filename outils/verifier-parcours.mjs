@@ -213,6 +213,7 @@ const perso = {
   contacts: []
 };
 await page.setInputFiles('#fichier-donnees', { name: 'perso.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(perso)) });
+await page.locator('[role=status]').waitFor({ timeout: 5000 }).catch(() => {});
 verifier((await page.locator('main').innerText()).includes('Import réussi'), 'fichier valide importé');
 verifier(!(await page.locator('#bandeau-demo').isVisible()), 'bandeau démo retiré pour des données réelles');
 const zlib = await import('node:zlib');
@@ -245,6 +246,7 @@ await page.goto(urlFichier + '#/donnees');
 const proche = JSON.parse(fs.readFileSync(path.join(dossier, 'donnees_medicales.exemple.json'), 'utf-8'));
 proche.meta.donnees_fictives = false; proche.meta.lecture_seule = true; proche.meta.derniere_mise_a_jour = '2026-10-06';
 await page.setInputFiles('#fichier-donnees', { name: 'proche.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(proche)) });
+await page.waitForFunction(() => !document.getElementById('bandeau-proche').hidden, null, { timeout: 5000 }).catch(() => {});
 verifier((await page.locator('#bandeau-proche').innerText()).includes('lecture seule · données du 06/10/2026'), 'bandeau « mode proche » avec la date des données');
 await page.goto(urlFichier + '#/prises');
 verifier((await page.locator('main .prise').count()) === 2 && (await page.locator('main input[type="checkbox"]').count()) === 0, 'prises visibles, sans aucune case à cocher');
