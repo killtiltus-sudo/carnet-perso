@@ -49,7 +49,7 @@ verifier(accueil.includes('Prise de sang (DÉMO)') && accueil.includes('7 h 45')
 verifier(accueil.includes('Séance de chimiothérapie — cycle 2'), 'prochains traitements : chimiothérapie cycle 2');
 verifier((await page.locator('main .prise').count()) === 2, 'deux prises du jour (médicament A à 8 h et 20 h)');
 verifier(!accueil.includes('DÉMO D'), 'médicament D (dose « ? ») absent des prises');
-verifier(accueil.includes('Nom sur la boîte : GÉNÉRIQUE DÉMO A'), 'nom sur la boîte affiché avec la prise');
+verifier(accueil.includes('Boîte : GÉNÉRIQUE DÉMO A'), 'nom sur la boîte affiché avec la prise');
 await page.screenshot({ path: path.join(dossierCaptures, '1-accueil-iphone.png'), fullPage: true });
 
 console.log('2. Cocher une prise');
@@ -199,13 +199,15 @@ await contexte.close();
 console.log('10. Serveur local avec donnees_medicales.json à côté');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mes-soins-'));
 for (const f of ['index.html', 'sw.js', 'manifest.webmanifest']) fs.copyFileSync(path.join(dossier, f), path.join(tmp, f));
-fs.mkdirSync(path.join(tmp, 'icones'));
-for (const f of fs.readdirSync(path.join(dossier, 'icones'))) fs.copyFileSync(path.join(dossier, 'icones', f), path.join(tmp, 'icones', f));
+for (const d of ['icones', 'polices']) {
+  fs.mkdirSync(path.join(tmp, d));
+  for (const f of fs.readdirSync(path.join(dossier, d))) fs.copyFileSync(path.join(dossier, d, f), path.join(tmp, d, f));
+}
 fs.writeFileSync(path.join(tmp, 'donnees_medicales.json'), JSON.stringify(perso));
 const serveur = http.createServer((req, res) => {
   const f = path.join(tmp, decodeURIComponent(new URL(req.url, 'http://x').pathname).replace(/^\/$/, '/index.html'));
   if (!f.startsWith(tmp) || !fs.existsSync(f)) { res.writeHead(404); return res.end(); }
-  const types = { '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.js': 'text/javascript', '.png': 'image/png' };
+  const types = { '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.js': 'text/javascript', '.png': 'image/png', '.woff2': 'font/woff2', '.txt': 'text/plain' };
   res.writeHead(200, { 'Content-Type': types[path.extname(f)] || 'text/html; charset=utf-8' });
   fs.createReadStream(f).pipe(res);
 }).listen(0);
@@ -240,6 +242,22 @@ await page.route('https://exemple.test/**', route => {
 await page.goto('https://exemple.test/#/donnees');
 verifier(!requetes.some(u => u.includes('donnees_medicales.json')), 'donnees_medicales.json jamais demandé sur une adresse publique');
 verifier((await page.locator('main').innerText()).includes('démonstration'), 'données de démonstration utilisées');
+await contexte.close();
+
+console.log('10d. Apparence');
+({ contexte, page, erreurs } = await nouvellePage({ colorScheme: 'dark' }));
+await page.goto(urlFichier);
+const fondAuto = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+verifier(fondAuto === 'rgb(15, 21, 32)', 'mode sombre automatique quand le téléphone est en sombre');
+await page.goto(urlFichier + '#/plus');
+await page.check('input[name="theme"][value="clair"]');
+verifier(await page.evaluate(() => getComputedStyle(document.body).backgroundColor) === 'rgb(243, 246, 250)', 'choix « Clair » forcé');
+await page.reload();
+verifier(await page.evaluate(() => document.documentElement.dataset.theme) === 'light', 'choix d’apparence conservé');
+await page.check('input[name="theme"][value="sombre"]');
+await page.goto(urlFichier + '#/prises');
+await page.screenshot({ path: path.join(dossierCaptures, '12-prises-sombre.png'), fullPage: true });
+verifier(erreurs.length === 0, 'aucune erreur JavaScript (apparence)');
 await contexte.close();
 
 console.log('11. Affichage ordinateur');

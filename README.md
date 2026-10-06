@@ -14,6 +14,7 @@ Application **locale et installable sur iPhone** pour suivre tes rendez-vous, te
 |---|---|
 | `index.html` | L'application complète, en un seul fichier |
 | `manifest.webmanifest`, `sw.js`, `icones/` | Installation sur l'écran d'accueil et fonctionnement hors connexion |
+| `polices/` | Police Plus Jakarta Sans intégrée (licence SIL OFL, voir `polices/OFL.txt`) : aucune connexion à un service de polices |
 | `donnees_medicales.exemple.json` | Modèle de données **fictives**, à copier pour créer ton propre fichier |
 | `outils/verifier-parcours.mjs` | Test automatique, facultatif, réservé aux développeurs |
 
@@ -34,6 +35,9 @@ Après la première ouverture, l'application fonctionne **hors connexion**. Elle
 À savoir :
 - Tes données restent dans l'espace de stockage de l'application, sur l'iPhone. Supprimer l'icône de l'écran d'accueil peut effacer ces données : fais des sauvegardes (menu **Données**).
 - Pour être prévenu à l'heure, utilise l'export vers le **Calendrier** (§ 3). L'application ne peut pas te prévenir lorsqu'elle est fermée.
+
+### Apparence
+Menu **Plus → Apparence** : **Automatique** (suit le mode clair ou sombre du téléphone), **Clair** ou **Sombre**.
 
 ### Sur ordinateur
 - **En ligne** : ouvre l'adresse de l'application dans ton navigateur.

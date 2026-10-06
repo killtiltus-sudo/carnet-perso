@@ -1,7 +1,7 @@
 // Service worker : garde l'application en mémoire sur l'appareil pour qu'elle fonctionne hors connexion.
 // Il ne met en cache que les fichiers de l'application ; aucune donnée de santé ne transite par lui.
-const CACHE = 'mes-soins-v1';
-const FICHIERS = ['./', 'index.html', 'manifest.webmanifest', 'icones/icone-192.png', 'icones/icone-512.png', 'icones/apple-touch-icon.png'];
+const CACHE = 'mes-soins-v2';
+const FICHIERS = ['./', 'index.html', 'manifest.webmanifest', 'icones/icone-192.png', 'icones/icone-512.png', 'icones/apple-touch-icon.png', 'polices/plus-jakarta-sans.woff2'];
 
 self.addEventListener('install', ev => {
   ev.waitUntil(caches.open(CACHE).then(c => c.addAll(FICHIERS)).then(() => self.skipWaiting()));

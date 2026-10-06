@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- Confidentialité : aucune ressource externe, aucune connexion sortante (seule la lecture du fichier local donnees_medicales.json est permise). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex, nofollow">
 <meta name="color-scheme" content="light dark">
@@ -14,35 +14,64 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icones/icone-192.png">
-<meta name="theme-color" content="#1f5f8b">
+<meta name="theme-color" content="#F3F6FA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1520" media="(prefers-color-scheme: dark)">
 <title>Mes soins</title>
 <style>
-:root {
-  --bg: #f4f6f9; --surface: #ffffff; --surface-2: #eaeff5; --texte: #18212c; --texte-2: #4a5666; --bord: #cfd7e1;
-  --primaire: #1f5f8b; --primaire-texte: #ffffff; --focus: #d97706;
-  --ok: #17663a; --ok-fond: #e1f3e8; --alerte: #8a4b00; --alerte-fond: #fff1d6;
-  --danger: #a61b12; --danger-fond: #fde7e4; --demo: #7d1670; --demo-fond: #fbe4f7;
-  --t-consultation: #2b6cb0; --t-prise_de_sang: #c0392b; --t-chimiotherapie: #6b46c1; --t-immunotherapie: #2f855a;
-  --t-radiotherapie: #b7791f; --t-imagerie: #2c7a7b; --t-autre: #5a6678;
-  --rayon: 12px; --ombre: 0 1px 2px rgba(0,0,0,.06), 0 2px 8px rgba(0,0,0,.05);
+@font-face {
+  font-family: 'Plus Jakarta Sans'; font-style: normal; font-weight: 200 800; font-display: swap;
+  src: url('polices/plus-jakarta-sans.woff2') format('woff2');
 }
+/* Thème clair (par défaut) */
+:root {
+  color-scheme: light;
+  --bg: #F3F6FA; --surface: #FFFFFF; --surface-2: #EEF2F8; --texte: #10213A; --texte-2: #52627A; --bord: #DCE3EE;
+  --primaire: #1F5FBF; --primaire-fort: #174A96; --primaire-doux: #E3EDFB; --primaire-texte: #FFFFFF;
+  --hero: #1F5FBF; --hero-texte: #FFFFFF; --hero-piste: rgba(255,255,255,.28); --hero-bouton: #FFFFFF; --hero-bouton-texte: #1F5FBF;
+  --focus: #E08A00;
+  --ok: #157A4A; --ok-fond: #DFF3E8; --ok-texte: #0F5A36;
+  --alerte: #8A5300; --alerte-fond: #FFF1D6;
+  --danger: #B42318; --danger-fond: #FDE8E6; --compte-texte: #FFFFFF; --demo: #7D1670; --demo-fond: #FBE4F7;
+  --t-consultation: #1F5FBF; --t-prise_de_sang: #C0392B; --t-chimiotherapie: #5B3CC4; --t-immunotherapie: #157A4A;
+  --t-radiotherapie: #A8650F; --t-imagerie: #0E7C86; --t-autre: #5A6678;
+  --rayon: 20px; --ombre: 0 1px 3px rgba(16,33,58,.06), 0 6px 20px rgba(16,33,58,.05);
+}
+/* Thème sombre : automatique (réglage de l'iPhone) ou choisi dans « Plus » */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #10151b; --surface: #19212a; --surface-2: #232d38; --texte: #e8edf3; --texte-2: #a9b4c1; --bord: #34414f;
-    --primaire: #6cb4e6; --primaire-texte: #0a1825; --focus: #fbbf24;
-    --ok: #6fd69a; --ok-fond: #143222; --alerte: #f4c76b; --alerte-fond: #3a2b0e;
-    --danger: #ff9b91; --danger-fond: #3d1613; --demo: #f6a5ea; --demo-fond: #3a1335;
-    --t-consultation: #63a4e8; --t-prise_de_sang: #f07b6e; --t-chimiotherapie: #a78bfa; --t-immunotherapie: #5fcf8e;
-    --t-radiotherapie: #f0b955; --t-imagerie: #4fd1c5; --t-autre: #a0aec0;
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0F1520; --surface: #1A2230; --surface-2: #222C3C; --texte: #EEF2F7; --texte-2: #A3AEBF; --bord: #2B3647;
+    --primaire: #7AB0FF; --primaire-fort: #A7CBFF; --primaire-doux: #1D2E4A; --primaire-texte: #0B1A33;
+    --hero: #1D3A6B; --hero-texte: #FFFFFF; --hero-piste: rgba(255,255,255,.18); --hero-bouton: #7AB0FF; --hero-bouton-texte: #0B1A33;
+    --focus: #FBBF24;
+    --ok: #5FD3A6; --ok-fond: #163A2F; --ok-texte: #9BE8C8;
+    --alerte: #F2C46B; --alerte-fond: #3A2B0E;
+    --danger: #FF9B91; --danger-fond: #3D1613; --compte-texte: #2A0B08; --demo: #F6A5EA; --demo-fond: #3A1335;
+    --t-consultation: #7AB0FF; --t-prise_de_sang: #F07B6E; --t-chimiotherapie: #B9A2FF; --t-immunotherapie: #5FD3A6;
+    --t-radiotherapie: #F0B955; --t-imagerie: #4FD1C5; --t-autre: #A0AEC0;
     --ombre: none;
   }
 }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0F1520; --surface: #1A2230; --surface-2: #222C3C; --texte: #EEF2F7; --texte-2: #A3AEBF; --bord: #2B3647;
+  --primaire: #7AB0FF; --primaire-fort: #A7CBFF; --primaire-doux: #1D2E4A; --primaire-texte: #0B1A33;
+  --hero: #1D3A6B; --hero-texte: #FFFFFF; --hero-piste: rgba(255,255,255,.18); --hero-bouton: #7AB0FF; --hero-bouton-texte: #0B1A33;
+  --focus: #FBBF24;
+  --ok: #5FD3A6; --ok-fond: #163A2F; --ok-texte: #9BE8C8;
+  --alerte: #F2C46B; --alerte-fond: #3A2B0E;
+  --danger: #FF9B91; --danger-fond: #3D1613; --compte-texte: #2A0B08; --demo: #F6A5EA; --demo-fond: #3A1335;
+  --t-consultation: #7AB0FF; --t-prise_de_sang: #F07B6E; --t-chimiotherapie: #B9A2FF; --t-immunotherapie: #5FD3A6;
+  --t-radiotherapie: #F0B955; --t-imagerie: #4FD1C5; --t-autre: #A0AEC0;
+  --ombre: none;
+}
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; background: var(--bg); }
 body {
   margin: 0; background: var(--bg); color: var(--texte);
-  font: 17px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  padding-bottom: calc(76px + env(safe-area-inset-bottom));
+  word-spacing: .04em;
+  font: 17px/1.5 'Plus Jakarta Sans', system-ui, -apple-system, "Segoe UI", sans-serif;
+  padding-bottom: calc(84px + env(safe-area-inset-bottom));
 }
 a { color: var(--primaire); }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
@@ -51,144 +80,197 @@ a { color: var(--primaire); }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 [hidden] { display: none !important; }
 
-#bandeau-demo { background: var(--demo-fond); color: var(--demo); border-bottom: 2px solid var(--demo); padding: 8px 16px; font-weight: 700; text-align: center; font-size: 15px; }
-#bandeau-erreur { background: var(--danger-fond); color: var(--danger); border-bottom: 2px solid var(--danger); padding: 8px 16px; font-weight: 600; font-size: 15px; }
-header.app { padding: 12px 16px 4px; max-width: 760px; margin: 0 auto; }
-header.app .nom-app { font-weight: 700; font-size: 15px; color: var(--texte-2); text-transform: uppercase; letter-spacing: .05em; }
+#bandeau-demo { background: var(--demo-fond); color: var(--demo); padding: 8px 16px; font-weight: 700; text-align: center; font-size: 14px; padding-top: calc(8px + env(safe-area-inset-top)); }
+#bandeau-erreur { background: var(--danger-fond); color: var(--danger); padding: 8px 16px; font-weight: 600; font-size: 15px; }
+header.app { padding: calc(14px + env(safe-area-inset-top)) 20px 0; max-width: 760px; margin: 0 auto; }
+header.app .nom-app { font-weight: 800; font-size: 13px; color: var(--texte-2); text-transform: uppercase; letter-spacing: .08em; }
 
-main { max-width: 760px; margin: 0 auto; padding: 0 16px 24px; overflow-wrap: break-word; }
-main:focus { outline: none; }
-h1 { font-size: 26px; line-height: 1.2; margin: 8px 0 12px; }
-h2 { font-size: 19px; margin: 24px 0 8px; }
-h3 { font-size: 17px; margin: 0 0 4px; }
+main { max-width: 760px; margin: 0 auto; padding: 0 20px 28px; overflow-wrap: break-word; }
+main:focus, [tabindex="-1"]:focus { outline: none; }
+h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.01em; word-spacing: .1em; line-height: 1.15; margin: 4px 0 14px; }
+h2 { font-size: 19px; font-weight: 800; word-spacing: .08em; margin: 26px 0 10px; }
+h3 { font-size: 17px; font-weight: 700; margin: 0 0 4px; }
 p { margin: 0 0 10px; }
-.sous-titre { color: var(--texte-2); margin-top: -6px; }
+.sous-titre { color: var(--texte-2); font-weight: 600; margin-top: -10px; }
 
-.carte { background: var(--surface); border: 1px solid var(--bord); border-radius: var(--rayon); padding: 14px 16px; margin: 0 0 12px; box-shadow: var(--ombre); }
+.carte { background: var(--surface); border-radius: var(--rayon); padding: 16px; margin: 0 0 12px; box-shadow: var(--ombre); }
 .carte.vide { color: var(--texte-2); }
-.encadre { border-radius: var(--rayon); padding: 12px 14px; margin: 0 0 12px; border: 1px solid; }
-.encadre.info { background: var(--surface-2); border-color: var(--bord); }
-.encadre.alerte { background: var(--alerte-fond); border-color: var(--alerte); color: var(--texte); }
-.encadre.danger { background: var(--danger-fond); border-color: var(--danger); }
-.encadre.ok { background: var(--ok-fond); border-color: var(--ok); }
+.encadre { border-radius: var(--rayon); padding: 14px 16px; margin: 0 0 12px; }
+.encadre.info { background: var(--surface-2); }
+.encadre.alerte { background: var(--alerte-fond); color: var(--texte); }
+.encadre.alerte strong, .encadre.alerte a { color: var(--alerte); }
+.encadre.danger { background: var(--danger-fond); }
+.encadre.ok { background: var(--ok-fond); }
 .encadre > :last-child { margin-bottom: 0; }
+.encadre h2 { margin-top: 0; }
 
 .meta { color: var(--texte-2); font-size: 15px; }
 .meta div { margin-top: 2px; }
-.source { color: var(--texte-2); font-size: 14px; margin-top: 6px; }
-.badge { display: inline-block; font-size: 13px; font-weight: 700; padding: 2px 8px; border-radius: 999px; vertical-align: middle; }
-.badge.ok { background: var(--ok-fond); color: var(--ok); }
-.badge.alerte { background: var(--alerte-fond); color: var(--alerte); border: 1px dashed var(--alerte); }
-.badge.compte { background: var(--danger); color: #fff; min-width: 20px; text-align: center; padding: 0 6px; font-size: 12px; line-height: 20px; }
+.source { color: var(--texte-2); font-size: 13px; margin-top: 6px; }
+.badge { display: inline-block; font-size: 12px; font-weight: 800; padding: 3px 9px; border-radius: 999px; vertical-align: middle; }
+.badge.ok { background: var(--ok-fond); color: var(--ok-texte); }
+.badge.alerte { background: var(--alerte-fond); color: var(--alerte); }
+.badge.compte { background: var(--danger); color: var(--compte-texte); min-width: 20px; text-align: center; padding: 0 6px; font-size: 11px; line-height: 20px; }
 
-.type { display: inline-block; font-size: 13px; font-weight: 700; padding: 2px 8px 2px 6px; border-radius: 6px; background: var(--surface-2); border-left: 5px solid var(--tc, var(--t-autre)); margin-bottom: 4px; }
-.rdv.non-confirme { border-style: dashed; border-color: var(--alerte); }
+.type { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; padding: 3px 10px 3px 8px; border-radius: 999px; background: var(--surface-2); margin-bottom: 6px; }
+.type .pastille, .filtre .pastille { width: 9px; height: 9px; border-radius: 50%; background: var(--tc, var(--t-autre)); flex: none; }
+.rdv.non-confirme { box-shadow: inset 0 0 0 2px var(--alerte); background: var(--surface); }
 .rdv .quand { font-weight: 700; }
-.ligne-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.ligne-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 
 button, .bouton {
-  font: inherit; font-size: 16px; min-height: 44px; padding: 8px 16px; border-radius: 10px; cursor: pointer;
-  border: 1px solid var(--primaire); background: var(--primaire); color: var(--primaire-texte); font-weight: 600;
+  font: inherit; font-size: 16px; font-weight: 700; min-height: 44px; padding: 8px 18px; border-radius: 14px; cursor: pointer;
+  border: 0; background: var(--primaire); color: var(--primaire-texte);
   display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none;
 }
-button.secondaire, .bouton.secondaire { background: transparent; color: var(--primaire); }
-button.danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+button.secondaire, .bouton.secondaire { background: var(--primaire-doux); color: var(--primaire-fort); }
+button.danger { background: var(--danger-fond); color: var(--danger); }
 button:disabled { opacity: .5; cursor: not-allowed; }
-button.petit { min-height: 36px; padding: 4px 12px; font-size: 15px; }
+button.petit, .bouton.petit { min-height: 38px; padding: 4px 14px; font-size: 15px; border-radius: 12px; }
 input[type="text"], input[type="search"], input[type="date"], select {
-  font: inherit; font-size: 17px; min-height: 44px; padding: 8px 10px; border: 1px solid var(--bord); border-radius: 10px;
+  font: inherit; font-size: 17px; min-height: 48px; padding: 10px 14px; border: 1px solid var(--bord); border-radius: 14px;
   background: var(--surface); color: var(--texte); width: 100%;
 }
-label.champ { display: block; font-weight: 600; margin: 12px 0 4px; }
-fieldset { border: 1px solid var(--bord); border-radius: var(--rayon); padding: 8px 14px 14px; margin: 0 0 14px; background: var(--surface); }
-legend { font-weight: 700; padding: 0 6px; }
-.option { display: flex; align-items: center; gap: 10px; min-height: 40px; }
-.option input { width: 22px; height: 22px; flex: none; }
+label.champ { display: block; font-weight: 700; margin: 14px 0 6px; }
+fieldset { border: 0; border-radius: var(--rayon); padding: 14px 16px 16px; margin: 0 0 14px; background: var(--surface); box-shadow: var(--ombre); }
+legend { font-weight: 800; padding: 0; float: left; width: 100%; margin-bottom: 6px; }
+legend + * { clear: both; }
+.option { display: flex; align-items: center; gap: 12px; min-height: 44px; }
+.option input { width: 22px; height: 22px; flex: none; accent-color: var(--primaire); }
+
+/* Accueil */
+.hero { background: var(--hero); color: var(--hero-texte); border-radius: 24px; padding: 20px; display: flex; gap: 18px; align-items: center; margin-bottom: 14px; }
+.anneau { position: relative; width: 88px; height: 88px; flex: none; }
+.anneau svg { display: block; }
+.anneau span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; }
+.hero-titre { font-size: 19px; font-weight: 800; word-spacing: .08em; }
+.hero-ligne { font-size: 15px; opacity: .92; }
+.hero .bouton { margin-top: 10px; min-height: 40px; padding: 6px 16px; border-radius: 999px; background: var(--hero-bouton); color: var(--hero-bouton-texte); font-size: 15px; }
+.semaine { background: var(--surface); border-radius: var(--rayon); padding: 10px; box-shadow: var(--ombre); display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-bottom: 4px; }
+.semaine button { background: transparent; color: var(--texte); min-height: 0; padding: 6px 0 4px; border-radius: 12px; flex-direction: column; gap: 1px; font-size: 16px; }
+.semaine button .j { font-size: 11px; font-weight: 800; color: var(--texte-2); text-transform: uppercase; }
+.semaine button .pt { width: 6px; height: 6px; border-radius: 50%; background: var(--primaire); }
+.semaine button .pt.nc { background: transparent; box-shadow: inset 0 0 0 1.5px var(--alerte); }
+.semaine button .pt.vide { background: transparent; }
+.semaine button.auj { background: var(--primaire-doux); color: var(--primaire-fort); }
+.semaine button.auj .j { color: var(--primaire-fort); }
+.elements { display: flex; flex-direction: column; gap: 10px; }
+.element { background: var(--surface); border-radius: var(--rayon); padding: 14px 16px; display: flex; gap: 14px; align-items: center; box-shadow: var(--ombre); text-decoration: none; color: var(--texte); }
+.element .icone { width: 48px; height: 48px; border-radius: 14px; background: var(--surface-2); color: var(--tc, var(--primaire)); display: flex; align-items: center; justify-content: center; flex: none; }
+.element .corps { flex: 1; min-width: 0; }
+.element .titre { font-weight: 700; font-size: 16px; }
+.element .sous { font-size: 14px; color: var(--texte-2); }
+.element .delai { padding: 4px 10px; border-radius: 999px; background: var(--surface-2); font-size: 12px; font-weight: 800; color: var(--texte-2); white-space: nowrap; }
+.tuiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+.tuile { background: var(--surface); border-radius: 18px; padding: 14px 16px; text-decoration: none; color: var(--texte); display: flex; flex-direction: column; gap: 6px; box-shadow: var(--ombre); font-weight: 700; min-height: 88px; }
+.tuile svg { color: var(--primaire); }
+.tuile.alerte { background: var(--alerte-fond); color: var(--alerte); box-shadow: none; }
+.tuile.alerte svg { color: var(--alerte); }
 
 /* Prises */
-.prises { list-style: none; padding: 0; margin: 0; }
-.prise { display: grid; grid-template-columns: 74px 1fr auto; gap: 10px; align-items: start; background: var(--surface); border: 1px solid var(--bord); border-radius: var(--rayon); padding: 12px; margin-bottom: 10px; }
-.prise.prise-cochee { border-color: var(--ok); background: var(--ok-fond); }
-.prise .heure { font-weight: 800; font-size: 18px; white-space: nowrap; }
-.prise .nom { font-weight: 700; }
-.prise .dose { margin-top: 2px; }
-.nom_boite { font-size: 15px; color: var(--texte-2); margin-top: 1px; }
-.nom_boite strong { color: var(--texte); }
-.case-pris { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 14px; font-weight: 700; cursor: pointer; min-width: 52px; }
+.prises { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.prise { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; background: var(--surface); border-radius: 18px; padding: 14px 14px 14px 16px; box-shadow: var(--ombre); }
+.prise.prise-cochee { background: var(--ok-fond); box-shadow: none; }
+.prise.prochaine { box-shadow: inset 0 0 0 2px var(--primaire); }
+.prise .heure-mini { font-size: 13px; font-weight: 800; color: var(--texte-2); }
+.prise .nom { font-weight: 700; font-size: 16px; }
+.prise .dose { margin-top: 2px; font-size: 15px; }
+.prise .meta { font-size: 14px; }
+.nom-boite { display: inline-block; margin-top: 4px; padding: 2px 8px; border-radius: 6px; background: var(--surface-2); font-size: 12px; font-weight: 600; color: var(--texte-2); }
+.nom-boite strong { color: var(--texte); }
+.prise-cochee .nom-boite { background: var(--surface); }
+.case-pris { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 12px; font-weight: 800; cursor: pointer; min-width: 48px; }
 .case-pris input { width: 30px; height: 30px; margin: 0; accent-color: var(--ok); cursor: pointer; }
 .case-pris input:disabled { cursor: not-allowed; }
-.etat-prise { font-size: 14px; color: var(--ok); font-weight: 600; margin-top: 4px; }
-.progression { font-weight: 600; color: var(--texte-2); }
+.prise-cochee .case-pris { color: var(--ok-texte); }
+.details-prise { margin-top: 6px; font-size: 14px; color: var(--texte-2); }
+.details-prise summary { cursor: pointer; font-weight: 700; color: var(--primaire); padding: 4px 0; }
+.details-prise p { margin: 4px 0 0; }
+.etat-prise { font-size: 13px; color: var(--ok-texte); font-weight: 700; margin-top: 4px; }
+.progression { font-weight: 700; color: var(--ok); font-size: 15px; margin: 6px 0 14px; }
+.segments { display: flex; gap: 5px; }
+.segments span { flex: 1; height: 8px; border-radius: 999px; background: var(--bord); }
+.segments span.fait { background: var(--ok); }
+.groupe { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 10px; margin-bottom: 12px; }
+.groupe-heure { font-size: 14px; font-weight: 800; color: var(--texte-2); padding-top: 16px; }
+.groupe.maintenant .groupe-heure { color: var(--primaire); }
 
-/* Navigation date */
-.nav-date { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-.nav-date input { flex: 1; }
-.nav-date button { flex: none; min-width: 44px; padding: 8px 12px; }
+/* Navigation par date */
+.nav-date { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.nav-date .centre { flex: 1; text-align: center; }
+.nav-date .centre strong { display: block; font-size: 17px; font-weight: 800; }
+.nav-date input { min-height: 36px; padding: 4px 10px; font-size: 14px; width: auto; margin-top: 4px; }
+.nav-date > button { flex: none; width: 44px; padding: 0; background: var(--surface); color: var(--texte); box-shadow: var(--ombre); font-size: 20px; }
 
 /* Calendrier */
 .entete-mois { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .entete-mois h2 { margin: 0; text-transform: capitalize; font-size: 20px; }
-table.mois { width: 100%; border-collapse: separate; border-spacing: 3px; table-layout: fixed; }
-table.mois th { font-size: 13px; color: var(--texte-2); font-weight: 600; padding: 2px 0; }
-table.mois td { padding: 0; height: 54px; vertical-align: top; }
-.jour { width: 100%; height: 100%; min-height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 3px;
-  padding: 4px 2px; border-radius: 8px; border: 1px solid var(--bord); background: var(--surface); color: var(--texte); font-weight: 600; font-size: 15px; }
-.jour.aujourdhui { border: 2px solid var(--primaire); }
-.jour.selectionne { background: var(--primaire); color: var(--primaire-texte); border-color: var(--primaire); }
+.entete-mois button { width: 44px; padding: 0; background: var(--surface); color: var(--texte); box-shadow: var(--ombre); font-size: 20px; }
+table.mois { width: 100%; border-collapse: separate; border-spacing: 3px; table-layout: fixed; background: var(--surface); border-radius: var(--rayon); padding: 6px; box-shadow: var(--ombre); }
+table.mois th { font-size: 11px; color: var(--texte-2); font-weight: 800; padding: 4px 0; text-transform: uppercase; }
+table.mois abbr { text-decoration: none; }
+table.mois td { padding: 0; height: 50px; vertical-align: top; }
+.jour { width: 100%; height: 100%; min-height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 3px;
+  padding: 6px 2px; border-radius: 12px; background: transparent; color: var(--texte); font-weight: 700; font-size: 15px; }
+.jour.aujourdhui { background: var(--primaire-doux); color: var(--primaire-fort); }
+.jour.selectionne { background: var(--primaire); color: var(--primaire-texte); }
 .jour .points { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; }
-.jour .point { width: 8px; height: 8px; border-radius: 50%; background: var(--tc); }
-.jour .point.non-confirme { background: transparent; border: 2px dashed var(--tc); }
-.jour.selectionne .point { outline: 1px solid var(--primaire-texte); }
-.filtres { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
-.filtre { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--bord); background: var(--surface); font-size: 14px; cursor: pointer; min-height: 38px; }
-.filtre input { width: 18px; height: 18px; margin: 0; }
-.filtre .pastille { width: 12px; height: 12px; border-radius: 50%; background: var(--tc); }
+.jour .point { width: 7px; height: 7px; border-radius: 50%; background: var(--tc); }
+.jour .point.non-confirme { background: transparent; box-shadow: inset 0 0 0 1.5px var(--tc); }
+.jour.selectionne .point { box-shadow: 0 0 0 1.5px var(--primaire-texte); }
+.filtres { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px; }
+.filtre { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: var(--surface); font-size: 14px; font-weight: 600; cursor: pointer; min-height: 38px; box-shadow: var(--ombre); }
+.filtre input { width: 18px; height: 18px; margin: 0; accent-color: var(--primaire); }
 
 /* Symptômes */
-.consigne .texte-consigne { font-size: 17px; margin: 6px 0 10px; padding-left: 10px; border-left: 4px solid var(--primaire); }
+.consigne .texte-consigne { font-size: 17px; margin: 8px 0 12px; padding: 12px 14px; border-radius: 14px; background: var(--primaire-doux); }
 dl.details { margin: 0; }
-dl.details dt { font-weight: 700; color: var(--texte-2); font-size: 14px; margin-top: 8px; }
+dl.details dt { font-weight: 800; color: var(--texte-2); font-size: 13px; margin-top: 10px; text-transform: uppercase; letter-spacing: .04em; }
 dl.details dt:first-child { margin-top: 0; }
-dl.details dd { margin: 0; overflow-wrap: anywhere; }
+dl.details dd { margin: 2px 0 0; overflow-wrap: anywhere; }
 .message-aucune { font-size: 18px; font-weight: 700; }
 
 /* À confirmer */
-.non-valide { background: var(--alerte-fond); border: 1px dashed var(--alerte); border-radius: 8px; padding: 8px 10px; margin-top: 8px; font-size: 15px; }
-.non-valide summary { cursor: pointer; font-weight: 700; color: var(--alerte); min-height: 32px; }
+.non-valide { background: var(--alerte-fond); border-radius: 12px; padding: 10px 12px; margin-top: 10px; font-size: 15px; }
+.non-valide summary { cursor: pointer; font-weight: 800; color: var(--alerte); min-height: 32px; }
 .raisons { margin: 6px 0 0; padding-left: 20px; }
-.raisons li { margin-bottom: 2px; }
+.raisons li { margin-bottom: 3px; }
 
 /* Plus */
-.liste-liens { list-style: none; padding: 0; margin: 0; }
-.liste-liens a { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--bord); border-radius: var(--rayon); margin-bottom: 8px; text-decoration: none; color: var(--texte); font-weight: 600; min-height: 52px; }
-.liste-liens .desc { display: block; font-weight: 400; font-size: 14px; color: var(--texte-2); }
+.liste-liens { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.liste-liens a { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 16px; background: var(--surface); border-radius: 18px; text-decoration: none; color: var(--texte); font-weight: 700; min-height: 56px; box-shadow: var(--ombre); }
+.liste-liens .desc { display: block; font-weight: 500; font-size: 14px; color: var(--texte-2); }
+.choix-theme { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; background: var(--surface-2); border-radius: 14px; padding: 4px; }
+.choix-theme label { display: flex; align-items: center; justify-content: center; min-height: 44px; border-radius: 11px; font-weight: 700; font-size: 15px; cursor: pointer; }
+.choix-theme input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.choix-theme label:has(input:checked) { background: var(--surface); color: var(--primaire-fort); box-shadow: var(--ombre); }
+.choix-theme label:has(input:focus-visible) { outline: 3px solid var(--focus); }
 
 /* Navigation */
-nav.principale { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--bord); padding-bottom: env(safe-area-inset-bottom); z-index: 20; }
+nav.principale { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); padding-bottom: env(safe-area-inset-bottom); z-index: 20; box-shadow: 0 -1px 0 var(--bord); }
 nav.principale ul { list-style: none; margin: 0 auto; padding: 0; display: flex; max-width: 760px; }
 nav.principale li { flex: 1; }
 nav.principale li.secondaire { display: none; }
-nav.principale a { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 2px 6px; font-size: 12px; font-weight: 600; color: var(--texte-2); text-decoration: none; min-height: 60px; position: relative; }
-nav.principale a[aria-current="page"] { color: var(--primaire); }
-nav.principale a[aria-current="page"]::before { content: ""; position: absolute; top: 0; left: 20%; right: 20%; height: 3px; border-radius: 0 0 3px 3px; background: var(--primaire); }
+nav.principale a { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 2px 8px; font-size: 12px; font-weight: 600; color: var(--texte-2); text-decoration: none; min-height: 62px; position: relative; }
+nav.principale a[aria-current="page"] { color: var(--primaire); font-weight: 800; }
 nav.principale svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-nav.principale .badge.compte { position: absolute; top: 4px; left: 55%; }
+nav.principale a[aria-current="page"] svg { stroke-width: 2.4; }
+nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
 
 @media (min-width: 960px) {
-  body { padding-bottom: 0; padding-left: 230px; }
-  nav.principale { top: 0; right: auto; width: 230px; border-top: 0; border-right: 1px solid var(--bord); padding-top: 64px; }
-  nav.principale ul { flex-direction: column; padding: 0 10px; }
+  body { padding-bottom: 0; padding-left: 240px; }
+  nav.principale { top: 0; right: auto; width: 240px; box-shadow: 1px 0 0 var(--bord); padding-top: 70px; }
+  nav.principale ul { flex-direction: column; padding: 0 12px; gap: 2px; }
   nav.principale li.secondaire { display: block; }
   nav.principale li.plus { display: none; }
-  nav.principale a { flex-direction: row; gap: 12px; font-size: 16px; min-height: 48px; padding: 10px 12px; border-radius: 10px; }
-  nav.principale a[aria-current="page"] { background: var(--surface-2); }
-  nav.principale a[aria-current="page"]::before { display: none; }
+  nav.principale a { flex-direction: row; gap: 12px; font-size: 16px; min-height: 48px; padding: 10px 14px; border-radius: 12px; }
+  nav.principale a[aria-current="page"] { background: var(--primaire-doux); color: var(--primaire-fort); }
   nav.principale .badge.compte { position: static; margin-left: auto; }
 }
 
 /* Rappels affichés dans l'application */
-#zone-rappels { position: fixed; left: 0; right: 0; top: 0; z-index: 50; display: flex; flex-direction: column; gap: 8px; padding: 8px 16px; pointer-events: none; }
-.rappel { pointer-events: auto; max-width: 720px; margin: 0 auto; width: 100%; background: var(--surface); border: 2px solid var(--primaire); border-radius: var(--rayon); padding: 12px 14px; box-shadow: 0 6px 24px rgba(0,0,0,.2); }
+#zone-rappels { position: fixed; left: 0; right: 0; top: 0; z-index: 50; display: flex; flex-direction: column; gap: 8px; padding: calc(8px + env(safe-area-inset-top)) 16px 8px; pointer-events: none; }
+.rappel { pointer-events: auto; max-width: 720px; margin: 0 auto; width: 100%; background: var(--surface); border-radius: var(--rayon); padding: 14px 16px; box-shadow: 0 0 0 2px var(--primaire), 0 10px 30px rgba(0,0,0,.25); }
 .rappel strong { display: block; }
 #annonce { position: absolute; left: -9999px; }
 
@@ -528,7 +610,8 @@ const REGLAGES_DEFAUT = {
   rdvActif: true, rdvDelais: [1440, 60],
   medActif: true, medDelai: 0,
   horizonJours: 30, masquerDetails: false,
-  rappelsAppli: true, notifNavigateur: false
+  rappelsAppli: true, notifNavigateur: false,
+  theme: 'auto'
 };
 
 // ---------- Stockage local (jamais transmis) ----------
@@ -779,9 +862,34 @@ function listeSymptomesSelection() {
 }
 
 // ---------- Composants ----------
-function chipType(type) { return `<span class="type" style="--tc:var(--t-${type})">${esc(TYPES_RDV[type])}</span>`; }
-function ligneNomBoite(x) {
+function chipType(type) { return `<span class="type" style="--tc:var(--t-${type})"><span class="pastille" aria-hidden="true"></span>${esc(TYPES_RDV[type])}</span>`; }
+const ICONES_TYPE = {
+  consultation: '<path d="M5 3v6a5 5 0 0 0 10 0V3"></path><path d="M10 14v2a5 5 0 0 0 10 0v-3"></path><circle cx="20" cy="11" r="2"></circle>',
+  prise_de_sang: '<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"></path>',
+  chimiotherapie: '<path d="M7 3h10M9 3v6l-4 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-4-9V3"></path>',
+  immunotherapie: '<rect x="7" y="2" width="10" height="12" rx="2"></rect><path d="M12 14v3a4 4 0 0 0 4 4h2"></path><path d="M10 6h4M10 9h4"></path>',
+  radiotherapie: '<circle cx="12" cy="12" r="2"></circle><path d="M12 4a8 8 0 0 1 6.9 4M5.1 8A8 8 0 0 1 12 4M8 18.9a8 8 0 0 0 8 0"></path>',
+  imagerie: '<rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="12" cy="12" r="4"></circle>',
+  autre: '<rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path>'
+};
+function iconeType(type) {
+  return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONES_TYPE[type] || ICONES_TYPE.autre}</svg>`;
+}
+function delaiJours(iso, auj) {
+  const n = Math.round((isoVersDate(iso) - isoVersDate(auj)) / 86400000);
+  return n === 0 ? 'Aujourd’hui' : n === 1 ? 'Demain' : `J-${n}`;
+}
+function elementRdv(r, auj) {
+  return `<a class="element" href="#/calendrier" data-action="voir-jour" data-iso="${r.date}" style="--tc:var(--t-${r._type})">
+    <span class="icone">${iconeType(r._type)}</span>
+    <span class="corps"><span class="titre" style="display:block">${esc(r.titre)}</span>
+      <span class="sous" style="display:block">${esc(TYPES_RDV[r._type])} · ${esc(jourCourt(r.date))} · ${esc(heureFr(r.heure))}</span></span>
+    <span class="delai">${esc(delaiJours(r.date, auj))}</span>
+  </a>`;
+}
+function ligneNomBoite(x, compact) {
   if (typeof x.nom_boite !== 'string' || !x.nom_boite.trim()) return '';
+  if (compact) return `<div class="nom-boite">Boîte : <strong>${esc(x.nom_boite)}</strong></div>`;
   return `<div class="nom-boite">Nom sur la boîte : <strong>${esc(x.nom_boite)}</strong>${x.nom_boite_source ? ` <span class="meta">(${esc(x.nom_boite_source)})</span>` : ''}</div>`;
 }
 function badgeStatut(x) {
@@ -811,26 +919,33 @@ function carteRdv(r, options = {}) {
     ${actions}
   </article>`;
 }
-function lignePrise(p, prises, aujourdhui, prefixe) {
+function lignePrise(p, prises, aujourdhui, prefixe, opts = {}) {
   const coche = prises[p.cle];
   const futur = p.date > aujourdhui;
   const idInfo = `${prefixe}-info-${p.cle.replace(/[^a-zA-Z0-9]/g, '_')}`;
   const libelle = `Pris : ${p.med.nom}, ${heureFr(p.heure)}`;
-  return `<li class="prise${coche ? ' prise-cochee' : ''}">
-    <div class="heure">${esc(heureFr(p.heure))}</div>
+  const details = [
+    p.med.consignes_prise ? `<p>Consigne de prise : ${esc(p.med.consignes_prise)}</p>` : '',
+    p.med.nom_boite_source ? `<p>Nom sur la boîte : ${esc(p.med.nom_boite_source)}</p>` : '',
+    p.med.source ? `<p class="source">Source : ${esc(p.med.source)}</p>` : ''
+  ].join('');
+  return `<li class="prise${coche ? ' prise-cochee' : ''}${opts.prochaine && !coche ? ' prochaine' : ''}">
     <div id="${esc(idInfo)}">
+      ${opts.avecHeure ? `<div class="heure-mini">${esc(heureFr(p.heure))}</div>` : ''}
       <div class="nom">${esc(p.med.nom)}</div>
-      ${ligneNomBoite(p.med)}
+      ${ligneNomBoite(p.med, true)}
       <div class="dose">Dose prescrite : <strong>${esc(p.med.dose)}</strong></div>
-      ${p.med.consignes_prise ? `<div class="meta">Consigne de prise : ${esc(p.med.consignes_prise)}</div>` : ''}
-      ${p.med.source ? `<div class="source">Source : ${esc(p.med.source)}</div>` : ''}
       ${coche ? `<div class="etat-prise">Cochée le ${esc(fmtHorodatage.format(new Date(coche.coche)))}</div>` : ''}
+      ${details ? `<details class="details-prise"><summary>Détails et source</summary>${details}</details>` : ''}
     </div>
     <label class="case-pris" title="${futur ? 'Tu pourras cocher cette prise le jour venu.' : ''}">
       <input type="checkbox" data-cle="${esc(p.cle)}" ${coche ? 'checked' : ''} ${futur ? 'disabled' : ''} aria-label="${esc(libelle)}" aria-describedby="${esc(idInfo)}">
       Pris
     </label>
   </li>`;
+}
+function prochainePrise(prises, etatP, maintenant) {
+  return prises.find(p => !etatP[p.cle] && dateHeure(p.date, p.heure) >= maintenant);
 }
 function blocContacts() {
   const cts = D.contacts.filter(c => c._confirme);
@@ -849,23 +964,55 @@ function vueAccueil() {
   const prochain = rdvAVenir(maintenant)[0];
   const traitements = rdvAVenir(maintenant, r => TYPES_TRAITEMENT.includes(r._type)).slice(0, 3);
   const prises = prisesDuJour(auj);
-  const etatPrises = lirePrises();
-  const faites = prises.filter(p => etatPrises[p.cle]).length;
+  const etatP = lirePrises();
+  const faites = prises.filter(p => etatP[p.cle]).length;
+  const suivante = prochainePrise(prises, etatP, maintenant);
   const nbNC = rdvDatesNonConfirmes().filter(r => r.date >= auj).length;
   const nbConf = nbAConfirmer();
+  const circ = 2 * Math.PI * 34;
+  const arc = prises.length ? circ * faites / prises.length : 0;
+  let l1, l2 = '';
+  if (!prises.length) l1 = 'Aucune prise prévue aujourd’hui';
+  else if (faites === prises.length) l1 = 'Toutes les prises du jour sont cochées';
+  else if (suivante) { l1 = `Prochaine : ${heureFr(suivante.heure)}`; l2 = suivante.med.nom; }
+  else l1 = `${faites} prise${faites > 1 ? 's' : ''} cochée${faites > 1 ? 's' : ''} sur ${prises.length}`;
+  const lundi = ajouterJours(auj, -((isoVersDate(auj).getDay() + 6) % 7));
+  const tousRdv = rdvConfirmes().concat(rdvDatesNonConfirmes());
+  const semaine = [0, 1, 2, 3, 4, 5, 6].map(i => {
+    const iso = ajouterJours(lundi, i); const d = isoVersDate(iso);
+    const l = tousRdv.filter(r => r.date === iso);
+    const pt = !l.length ? 'pt vide' : l.some(r => r._confirme) ? 'pt' : 'pt nc';
+    return `<button data-action="voir-jour" data-iso="${iso}" class="${iso === auj ? 'auj' : ''}" aria-label="${esc(jourLong(iso))} : ${l.length ? l.length + ' rendez-vous' : 'aucun rendez-vous'}"><span class="j">${['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'][d.getDay()]}</span>${d.getDate()}<span class="${pt}"></span></button>`;
+  }).join('');
+  const ic = d => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
   return `<h1>Bonjour</h1>
   <p class="sous-titre">${esc(jourLong(auj))}</p>
-  ${nbConf ? `<div class="encadre alerte"><p><strong>${nbConf} élément${nbConf > 1 ? 's' : ''} à confirmer</strong> dans tes données : ${nbConf > 1 ? 'ils ne sont pas affichés' : 'il n’est pas affiché'} comme ${nbConf > 1 ? 'confirmés' : 'confirmé'}.</p><p><a href="#/a-confirmer">Voir l’écran « À confirmer »</a></p></div>` : ''}
+  <section class="hero" aria-label="Prises du jour">
+    <div class="anneau"><svg width="88" height="88" viewBox="0 0 88 88" aria-hidden="true"><circle cx="44" cy="44" r="34" fill="none" style="stroke: var(--hero-piste)" stroke-width="9"></circle><circle cx="44" cy="44" r="34" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-opacity="${faites ? 1 : 0}" stroke-dasharray="${arc.toFixed(1)} ${circ.toFixed(1)}" transform="rotate(-90 44 44)"></circle></svg><span>${faites}/${prises.length}</span></div>
+    <div>
+      <div class="hero-titre">Prises du jour</div>
+      <div class="hero-ligne">${esc(l1)}</div>
+      ${l2 ? `<div class="hero-ligne">${esc(l2)}</div>` : ''}
+      <a class="bouton" href="#/prises">Voir les prises</a>
+    </div>
+  </section>
+  <div class="semaine" role="group" aria-label="Cette semaine">${semaine}</div>
   <h2>Prochain rendez-vous</h2>
-  ${prochain ? carteRdv(prochain, { actions: false }) : '<div class="carte vide">Aucun rendez-vous confirmé à venir.</div>'}
-  ${nbNC ? `<p class="meta">${nbNC} rendez-vous à venir ${nbNC > 1 ? 'sont' : 'est'} encore à confirmer et n’${nbNC > 1 ? 'apparaissent' : 'apparaît'} pas ici.</p>` : ''}
+  ${prochain ? `<div class="elements">${elementRdv(prochain, auj)}</div>` : '<div class="carte vide">Aucun rendez-vous confirmé à venir.</div>'}
+  ${nbNC ? `<p class="meta" style="margin-top:8px">${nbNC} rendez-vous à venir ${nbNC > 1 ? 'sont' : 'est'} encore à confirmer et n’${nbNC > 1 ? 'apparaissent' : 'apparaît'} pas ici.</p>` : ''}
   <h2>Prochains traitements</h2>
-  ${traitements.length ? traitements.map(r => carteRdv(r, { actions: false })).join('') : '<div class="carte vide">Aucune séance de traitement confirmée à venir.</div>'}
+  ${traitements.length ? `<div class="elements">${traitements.map(r => elementRdv(r, auj)).join('')}</div>` : '<div class="carte vide">Aucune séance de traitement confirmée à venir.</div>'}
   <h2>Prises du jour</h2>
   ${prises.length ? `<p class="progression">${faites} sur ${prises.length} cochée${faites > 1 ? 's' : ''}</p>
-    <ul class="prises">${prises.map(p => lignePrise(p, etatPrises, auj, 'acc')).join('')}</ul>`
+    <ul class="prises">${prises.map(p => lignePrise(p, etatP, auj, 'acc', { avecHeure: true, prochaine: p === suivante })).join('')}</ul>`
     : '<div class="carte vide">Aucune prise confirmée prévue aujourd’hui.</div>'}
-  <p class="meta"><a href="#/prises">Ouvrir l’agenda des médicaments</a></p>`;
+  <div class="tuiles">
+    <a class="tuile" href="#/symptomes">${ic('<circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path>')}Un symptôme ?</a>
+    ${nbConf ? `<a class="tuile alerte" href="#/a-confirmer">${ic('<circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16.5v.5"></path>')}${nbConf} à confirmer</a>`
+      : `<a class="tuile" href="#/calendrier">${ic('<rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path>')}Calendrier</a>`}
+    <a class="tuile" href="#/rappels">${ic('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"></path>')}Rappels</a>
+    <a class="tuile" href="#/historique">${ic('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5M12 7v5l3 3"></path>')}Historique</a>
+  </div>`;
 }
 
 function vueCalendrier() {
@@ -922,24 +1069,35 @@ function vueCalendrier() {
 }
 
 function vuePrises() {
-  const auj = dateVersIso(new Date());
+  const maintenant = new Date();
+  const auj = dateVersIso(maintenant);
   if (!etat.datePrises) etat.datePrises = auj;
   const iso = etat.datePrises;
   const prises = prisesDuJour(iso);
   const etatP = lirePrises();
   const faites = prises.filter(p => etatP[p.cle]).length;
   const exclus = D.medicaments.filter(m => !m._confirme).length;
-  return `<h1>Prises de médicaments</h1>
+  const suivante = iso === auj ? prochainePrise(prises, etatP, maintenant) : null;
+  const groupes = [];
+  prises.forEach(p => { const g = groupes[groupes.length - 1]; if (g && g.heure === p.heure) g.items.push(p); else groupes.push({ heure: p.heure, items: [p] }); });
+  return `<h1>Prises</h1>
   <div class="nav-date">
-    <button class="secondaire" data-action="jour-prises" data-delta="-1" aria-label="Jour précédent">‹</button>
-    <label class="sr" for="date-prises">Date</label>
-    <input type="date" id="date-prises" value="${iso}">
-    <button class="secondaire" data-action="jour-prises" data-delta="1" aria-label="Jour suivant">›</button>
+    <button data-action="jour-prises" data-delta="-1" aria-label="Jour précédent">‹</button>
+    <div class="centre">
+      <strong>${esc(jourLong(iso))}</strong>
+      <span class="meta">${iso === auj ? 'Aujourd’hui' : ''}</span>
+      <label class="sr" for="date-prises">Choisir une date</label>
+      <input type="date" id="date-prises" value="${iso}">
+    </div>
+    <button data-action="jour-prises" data-delta="1" aria-label="Jour suivant">›</button>
   </div>
-  <h2 style="margin-top:0">${esc(jourLong(iso))}${iso === auj ? ' — aujourd’hui' : ''}</h2>
-  ${iso !== auj ? '<div class="ligne-actions" style="margin:0 0 12px"><button class="secondaire petit" data-action="prises-aujourdhui">Revenir à aujourd’hui</button></div>' : ''}
-  ${prises.length ? `<p class="progression">${faites} sur ${prises.length} cochée${faites > 1 ? 's' : ''}</p>
-    <ul class="prises">${prises.map(p => lignePrise(p, etatP, auj, 'agd')).join('')}</ul>`
+  ${iso !== auj ? '<div class="ligne-actions" style="margin:0 0 12px;justify-content:center"><button class="secondaire petit" data-action="prises-aujourdhui">Revenir à aujourd’hui</button></div>' : ''}
+  ${prises.length ? `<div class="segments" aria-hidden="true">${prises.map(p => `<span class="${etatP[p.cle] ? 'fait' : ''}"></span>`).join('')}</div>
+    <p class="progression">${faites} sur ${prises.length} cochée${faites > 1 ? 's' : ''}</p>
+    ${groupes.map(g => `<div class="groupe${suivante && suivante.heure === g.heure ? ' maintenant' : ''}">
+      <div class="groupe-heure">${esc(heureFr(g.heure))}</div>
+      <ul class="prises">${g.items.map(p => lignePrise(p, etatP, auj, 'agd', { prochaine: p === suivante })).join('')}</ul>
+    </div>`).join('')}`
     : '<div class="carte vide">Aucune prise confirmée prévue ce jour.</div>'}
   ${iso > auj ? '<p class="meta">Les cases des jours à venir ne peuvent pas encore être cochées.</p>' : ''}
   ${exclus ? `<div class="encadre alerte"><p>${exclus} médicament${exclus > 1 ? 's' : ''} n’${exclus > 1 ? 'apparaissent' : 'apparaît'} pas ici, car ${exclus > 1 ? 'leurs' : 'ses'} informations sont incomplètes ou à confirmer.</p><p><a href="#/a-confirmer">Voir l’écran « À confirmer »</a></p></div>` : ''}
@@ -1169,7 +1327,13 @@ function vueDonnees() {
 
 function vuePlus() {
   const n = nbAConfirmer();
+  const th = reglages.theme || 'auto';
+  const opt = (v, l) => `<label><input type="radio" name="theme" value="${v}" ${th === v ? 'checked' : ''}>${l}</label>`;
   return `<h1>Plus</h1>
+  <h2 style="margin-top:0">Apparence</h2>
+  <div class="choix-theme" role="radiogroup" aria-label="Apparence">${opt('auto', 'Automatique')}${opt('clair', 'Clair')}${opt('sombre', 'Sombre')}</div>
+  <p class="meta" style="margin-top:6px">« Automatique » suit le mode clair ou sombre de ton téléphone.</p>
+  <h2>Menu</h2>
   <ul class="liste-liens">
     <li><a href="#/historique"><span>Historique<span class="desc">Prises cochées et rendez-vous réalisés</span></span><span aria-hidden="true">›</span></a></li>
     <li><a href="#/rappels"><span>Rappels<span class="desc">Export vers le calendrier et réglages</span></span><span aria-hidden="true">›</span></a></li>
@@ -1236,6 +1400,15 @@ function marquerRealise(id, oui) {
   rendre(false);
 }
 function sauverReglages() { stock.ecrire('reglages', reglages); }
+function appliquerTheme() {
+  const th = reglages.theme, r = document.documentElement;
+  if (th === 'clair') r.dataset.theme = 'light'; else if (th === 'sombre') r.dataset.theme = 'dark'; else delete r.dataset.theme;
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m => {
+    const sombre = (m.getAttribute('media') || '').includes('dark');
+    m.setAttribute('content', th === 'clair' ? '#F3F6FA' : th === 'sombre' ? '#0F1520' : (sombre ? '#0F1520' : '#F3F6FA'));
+  });
+}
+appliquerTheme();
 
 document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-action]');
@@ -1244,6 +1417,10 @@ document.addEventListener('click', ev => {
   if (a === 'jour') { etat.jourSel = b.dataset.iso; rendre(false); const t = document.getElementById('titre-jour'); if (t) { t.tabIndex = -1; } }
   else if (a === 'mois') { etat.mois = new Date(etat.mois.getFullYear(), etat.mois.getMonth() + Number(b.dataset.delta), 1); rendre(false); }
   else if (a === 'aujourdhui') { const d = new Date(); etat.mois = new Date(d.getFullYear(), d.getMonth(), 1); etat.jourSel = dateVersIso(d); rendre(false); }
+  else if (a === 'voir-jour') {
+    const d = isoVersDate(b.dataset.iso); etat.jourSel = b.dataset.iso; etat.mois = new Date(d.getFullYear(), d.getMonth(), 1);
+    if (b.tagName !== 'A') location.hash = '#/calendrier';
+  }
   else if (a === 'jour-prises') { etat.datePrises = ajouterJours(etat.datePrises, Number(b.dataset.delta)); rendre(false); }
   else if (a === 'prises-aujourdhui') { etat.datePrises = dateVersIso(new Date()); rendre(false); }
   else if (a === 'marquer-realise') marquerRealise(b.dataset.id, true);
@@ -1260,7 +1437,7 @@ document.addEventListener('click', ev => {
   }
   else if (a === 'tout-effacer') {
     if (confirm('Effacer toutes les données de cet appareil (données importées, coches, rendez-vous réalisés, réglages) ? Cette action est définitive.')) {
-      stock.toutEffacer(); reglages = Object.assign({}, REGLAGES_DEFAUT); etat.rapportImport = null;
+      stock.toutEffacer(); reglages = Object.assign({}, REGLAGES_DEFAUT); etat.rapportImport = null; appliquerTheme();
       chargerDonnees().then(() => { rendre(false); annoncer('Toutes les données de cet appareil ont été effacées.'); });
     }
   }
@@ -1285,6 +1462,7 @@ document.addEventListener('change', ev => {
     reglages.rdvDelais = t.checked ? [...new Set(reglages.rdvDelais.concat(v))] : reglages.rdvDelais.filter(x => x !== v);
     sauverReglages();
   }
+  else if (t.name === 'theme') { reglages.theme = t.value; sauverReglages(); appliquerTheme(); annoncer('Apparence modifiée.'); }
   else if (t.id === 'delai-med') { reglages.medDelai = Number(t.value); sauverReglages(); }
   else if (t.id === 'horizon') { reglages.horizonJours = Number(t.value); sauverReglages(); }
   else if (t.id === 'fichier-donnees' && t.files[0]) importerDonnees(t.files[0]);
