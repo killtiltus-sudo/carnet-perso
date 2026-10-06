@@ -206,6 +206,24 @@ verifier((await page.locator('#resultat-symptome').innerText()).includes(MESSAGE
 verifier(erreurs.length === 0, 'aucune erreur JavaScript' + (erreurs.length ? ' : ' + erreurs.join(' | ') : ''));
 await contexte.close();
 
+console.log('9b. Mode proche (lecture seule)');
+({ contexte, page, erreurs } = await nouvellePage());
+await page.goto(urlFichier + '#/donnees');
+const proche = JSON.parse(fs.readFileSync(path.join(dossier, 'donnees_medicales.exemple.json'), 'utf-8'));
+proche.meta.donnees_fictives = false; proche.meta.lecture_seule = true; proche.meta.derniere_mise_a_jour = '2026-10-06';
+await page.setInputFiles('#fichier-donnees', { name: 'proche.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(proche)) });
+verifier((await page.locator('#bandeau-proche').innerText()).includes('lecture seule · données du 06/10/2026'), 'bandeau « mode proche » avec la date des données');
+await page.goto(urlFichier + '#/prises');
+verifier((await page.locator('main .prise').count()) === 2 && (await page.locator('main input[type="checkbox"]').count()) === 0, 'prises visibles, sans aucune case à cocher');
+await page.goto(urlFichier + '#/historique');
+verifier((await page.locator('button[data-action="marquer-realise"]').count()) === 0, 'pas de bouton « réalisé »');
+await page.goto(urlFichier + '#/rappels');
+const [tp] = await Promise.all([page.waitForEvent('download'), page.click('button[data-action="ics"][data-quoi="rdv"]')]);
+const icsP = fs.readFileSync(await tp.path(), 'utf-8');
+verifier(icsP.includes('rdv-demo-03') && !icsP.includes('med-demo'), 'export calendrier : rendez-vous uniquement');
+verifier(erreurs.length === 0, 'aucune erreur JavaScript (mode proche)');
+await contexte.close();
+
 console.log('10. Serveur local avec donnees_medicales.json à côté');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mes-soins-'));
 for (const f of ['index.html', 'sw.js', 'manifest.webmanifest']) fs.copyFileSync(path.join(dossier, f), path.join(tmp, f));

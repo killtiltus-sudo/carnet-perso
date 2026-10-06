@@ -81,6 +81,7 @@ a { color: var(--primaire); }
 [hidden] { display: none !important; }
 
 #bandeau-demo { background: var(--demo-fond); color: var(--demo); padding: 8px 16px; font-weight: 700; text-align: center; font-size: 14px; padding-top: calc(8px + env(safe-area-inset-top)); }
+#bandeau-proche { background: var(--primaire-doux); color: var(--primaire-fort); padding: 8px 16px; font-weight: 700; text-align: center; font-size: 14px; padding-top: calc(8px + env(safe-area-inset-top)); }
 #bandeau-erreur { background: var(--danger-fond); color: var(--danger); padding: 8px 16px; font-weight: 600; font-size: 15px; }
 header.app { padding: calc(14px + env(safe-area-inset-top)) 20px 0; max-width: 760px; margin: 0 auto; }
 header.app .nom-app { font-weight: 800; font-size: 13px; color: var(--texte-2); text-transform: uppercase; letter-spacing: .08em; }
@@ -284,6 +285,7 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
 </head>
 <body>
 <a class="skip" href="#contenu">Aller au contenu</a>
+<div id="bandeau-proche" role="note" hidden></div>
 <div id="bandeau-demo" role="note" hidden>DONNÉES FICTIVES DE DÉMONSTRATION — ce ne sont pas tes rendez-vous ni tes traitements.</div>
 <div id="bandeau-erreur" role="alert" hidden></div>
 <div id="bandeau-stockage" class="encadre alerte" role="alert" hidden style="margin:0;border-radius:0">Le stockage local est indisponible dans ce navigateur (navigation privée ?). Tes coches et réglages ne seront pas conservés.</div>
@@ -586,7 +588,7 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
 
 // ---------- Constantes ----------
 const PREFIXE = 'mesSoins.v1.';
-const VERSION_APP = '1.5 — 06/10/2026';
+const VERSION_APP = '1.6 — 06/10/2026';
 const MESSAGE_AUCUNE_CONSIGNE = 'Aucune consigne confirmée dans les documents enregistrés. Contacte ton équipe soignante ou ton pharmacien.';
 const TYPES_RDV = {
   consultation: 'Consultation',
@@ -684,7 +686,7 @@ function validerDonnees(brut) {
     R.structure.push('Le fichier doit contenir un objet JSON qui commence par « { ».');
     return R;
   }
-  if (brut.meta && typeof brut.meta === 'object') { R.meta = brut.meta; R.fictif = brut.meta.donnees_fictives === true; }
+  if (brut.meta && typeof brut.meta === 'object') { R.meta = brut.meta; R.fictif = brut.meta.donnees_fictives === true; R.lectureSeule = brut.meta.lecture_seule === true; }
   else R.avertissements.push('Section « meta » absente : les données sont considérées comme réelles (non fictives).');
 
   const ids = new Set();
@@ -902,7 +904,7 @@ function carteRdv(r, options = {}) {
   const quand = `${jourLong(r.date)}${r._heureOK ? ' à ' + heureFr(r.heure) : ''}`;
   const heureMq = !r._heureOK ? '<div><strong>Heure à confirmer</strong></div>' : '';
   let actions = '';
-  if (r._confirme && options.actions !== false) {
+  if (r._confirme && options.actions !== false && !D.lectureSeule) {
     const passe = rdvDebut(r) <= new Date();
     if (realises[r._id]) actions = `<div class="ligne-actions"><span class="badge ok">Réalisé</span><button class="secondaire petit" data-action="annuler-realise" data-id="${esc(r._id)}">Annuler « réalisé »</button></div>`;
     else if (passe) actions = `<div class="ligne-actions"><button class="secondaire petit" data-action="marquer-realise" data-id="${esc(r._id)}">Marquer comme réalisé</button></div>`;
@@ -940,10 +942,10 @@ function lignePrise(p, prises, aujourdhui, prefixe, opts = {}) {
       ${coche ? `<div class="etat-prise">Cochée le ${esc(fmtHorodatage.format(new Date(coche.coche)))}</div>` : ''}
       ${details ? `<details class="details-prise"><summary>Détails et source</summary>${details}</details>` : ''}
     </div>
-    <label class="case-pris" title="${futur ? 'Tu pourras cocher cette prise le jour venu.' : ''}">
+    ${D.lectureSeule ? '' : `<label class="case-pris" title="${futur ? 'Tu pourras cocher cette prise le jour venu.' : ''}">
       <input type="checkbox" data-cle="${esc(p.cle)}" ${coche ? 'checked' : ''} ${futur ? 'disabled' : ''} aria-label="${esc(libelle)}" aria-describedby="${esc(idInfo)}">
       Pris
-    </label>
+    </label>`}
   </li>`;
 }
 function prochainePrise(prises, etatP, maintenant) {
@@ -966,7 +968,8 @@ function vueAccueil() {
   const prochain = rdvAVenir(maintenant)[0];
   const traitements = rdvAVenir(maintenant, r => TYPES_TRAITEMENT.includes(r._type)).slice(0, 3);
   const prises = prisesDuJour(auj);
-  const etatP = lirePrises();
+  const lecture = D.lectureSeule;
+  const etatP = lecture ? {} : lirePrises();
   const faites = prises.filter(p => etatP[p.cle]).length;
   const suivante = prochainePrise(prises, etatP, maintenant);
   const nbNC = rdvDatesNonConfirmes().filter(r => r.date >= auj).length;
@@ -977,7 +980,7 @@ function vueAccueil() {
   if (!prises.length) l1 = 'Aucune prise prévue aujourd’hui';
   else if (faites === prises.length) l1 = 'Toutes les prises du jour sont cochées';
   else if (suivante) { l1 = `Prochaine : ${heureFr(suivante.heure)}`; l2 = suivante.med.nom; }
-  else l1 = `${faites} prise${faites > 1 ? 's' : ''} cochée${faites > 1 ? 's' : ''} sur ${prises.length}`;
+  else l1 = lecture ? 'Plus de prise prévue aujourd’hui' : `${faites} prise${faites > 1 ? 's' : ''} cochée${faites > 1 ? 's' : ''} sur ${prises.length}`;
   const lundi = ajouterJours(auj, -((isoVersDate(auj).getDay() + 6) % 7));
   const tousRdv = rdvConfirmes().concat(rdvDatesNonConfirmes());
   const semaine = [0, 1, 2, 3, 4, 5, 6].map(i => {
@@ -990,9 +993,9 @@ function vueAccueil() {
   return `<h1>Bonjour</h1>
   <p class="sous-titre">${esc(jourLong(auj))}</p>
   <section class="hero" aria-label="Prises du jour">
-    <div class="anneau"><svg width="88" height="88" viewBox="0 0 88 88" aria-hidden="true"><circle cx="44" cy="44" r="34" fill="none" style="stroke: var(--hero-piste)" stroke-width="9"></circle><circle cx="44" cy="44" r="34" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-opacity="${faites ? 1 : 0}" stroke-dasharray="${arc.toFixed(1)} ${circ.toFixed(1)}" transform="rotate(-90 44 44)"></circle></svg><span>${faites}/${prises.length}</span></div>
+    <div class="anneau"><svg width="88" height="88" viewBox="0 0 88 88" aria-hidden="true"><circle cx="44" cy="44" r="34" fill="none" style="stroke: var(--hero-piste)" stroke-width="9"></circle><circle cx="44" cy="44" r="34" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-opacity="${faites ? 1 : 0}" stroke-dasharray="${arc.toFixed(1)} ${circ.toFixed(1)}" transform="rotate(-90 44 44)"></circle></svg><span>${lecture ? prises.length : `${faites}/${prises.length}`}</span></div>
     <div>
-      <div class="hero-titre">Prises du jour</div>
+      <div class="hero-titre">${lecture ? 'Prises prévues aujourd’hui' : 'Prises du jour'}</div>
       <div class="hero-ligne">${esc(l1)}</div>
       ${l2 ? `<div class="hero-ligne">${esc(l2)}</div>` : ''}
       <a class="bouton" href="#/prises">Voir les prises</a>
@@ -1005,7 +1008,7 @@ function vueAccueil() {
   <h2>Prochains traitements</h2>
   ${traitements.length ? `<div class="elements">${traitements.map(r => elementRdv(r, auj)).join('')}</div>` : '<div class="carte vide">Aucune séance de traitement confirmée à venir.</div>'}
   <h2>Prises du jour</h2>
-  ${prises.length ? `<p class="progression">${faites} sur ${prises.length} cochée${faites > 1 ? 's' : ''}</p>
+  ${prises.length ? `${lecture ? '' : `<p class="progression">${faites} sur ${prises.length} cochée${faites > 1 ? 's' : ''}</p>`}
     <ul class="prises">${prises.map(p => lignePrise(p, etatP, auj, 'acc', { avecHeure: true, prochaine: p === suivante })).join('')}</ul>`
     : '<div class="carte vide">Aucune prise confirmée prévue aujourd’hui.</div>'}
   <div class="tuiles">
@@ -1076,7 +1079,7 @@ function vuePrises() {
   if (!etat.datePrises) etat.datePrises = auj;
   const iso = etat.datePrises;
   const prises = prisesDuJour(iso);
-  const etatP = lirePrises();
+  const etatP = D.lectureSeule ? {} : lirePrises();
   const faites = prises.filter(p => etatP[p.cle]).length;
   const exclus = D.medicaments.filter(m => !m._confirme).length;
   const suivante = iso === auj ? prochainePrise(prises, etatP, maintenant) : null;
@@ -1094,14 +1097,14 @@ function vuePrises() {
     <button data-action="jour-prises" data-delta="1" aria-label="Jour suivant">›</button>
   </div>
   ${iso !== auj ? '<div class="ligne-actions" style="margin:0 0 12px;justify-content:center"><button class="secondaire petit" data-action="prises-aujourdhui">Revenir à aujourd’hui</button></div>' : ''}
-  ${prises.length ? `<div class="segments" aria-hidden="true">${prises.map(p => `<span class="${etatP[p.cle] ? 'fait' : ''}"></span>`).join('')}</div>
-    <p class="progression">${faites} sur ${prises.length} cochée${faites > 1 ? 's' : ''}</p>
+  ${prises.length ? `${D.lectureSeule ? `<p class="progression" style="color:var(--texte-2)">${prises.length} prise${prises.length > 1 ? 's' : ''} prévue${prises.length > 1 ? 's' : ''} ce jour</p>` : `<div class="segments" aria-hidden="true">${prises.map(p => `<span class="${etatP[p.cle] ? 'fait' : ''}"></span>`).join('')}</div>
+    <p class="progression">${faites} sur ${prises.length} cochée${faites > 1 ? 's' : ''}</p>`}
     ${groupes.map(g => `<div class="groupe${suivante && suivante.heure === g.heure ? ' maintenant' : ''}">
       <div class="groupe-heure">${esc(heureFr(g.heure))}</div>
       <ul class="prises">${g.items.map(p => lignePrise(p, etatP, auj, 'agd', { prochaine: p === suivante })).join('')}</ul>
     </div>`).join('')}`
     : '<div class="carte vide">Aucune prise confirmée prévue ce jour.</div>'}
-  ${iso > auj ? '<p class="meta">Les cases des jours à venir ne peuvent pas encore être cochées.</p>' : ''}
+  ${iso > auj && !D.lectureSeule ? '<p class="meta">Les cases des jours à venir ne peuvent pas encore être cochées.</p>' : ''}
   ${exclus ? `<div class="encadre alerte"><p>${exclus} médicament${exclus > 1 ? 's' : ''} n’${exclus > 1 ? 'apparaissent' : 'apparaît'} pas ici, car ${exclus > 1 ? 'leurs' : 'ses'} informations sont incomplètes ou à confirmer.</p><p><a href="#/a-confirmer">Voir l’écran « À confirmer »</a></p></div>` : ''}
   <div class="encadre info"><p>Cette page reprend uniquement les ordonnances enregistrées. Pour toute question sur une prise, contacte ton équipe soignante ou ton pharmacien.</p></div>`;
 }
@@ -1210,11 +1213,12 @@ function vueRappels() {
     <label class="option"><input type="checkbox" data-reglage="masquerDetails" ${r.masquerDetails ? 'checked' : ''}> Masquer les détails (nom du médicament, dose, lieu) dans le calendrier</label>
     <p class="meta">Si ton calendrier est synchronisé avec iCloud ou un autre compte, son contenu y est copié. Pour garder les données uniquement sur le téléphone, importe-les dans un calendrier « Sur mon iPhone », ou masque les détails.</p>
   </fieldset>
-  <div class="ligne-actions">
+  ${D.lectureSeule ? `<div class="encadre info"><p>Mode proche : seuls les rendez-vous sont exportés vers ton calendrier.</p></div>
+  <div class="ligne-actions"><button data-action="ics" data-quoi="rdv">Exporter les rendez-vous (${nbRdv})</button></div>` : `<div class="ligne-actions">
     <button data-action="ics" data-quoi="tout">Exporter tout (.ics)</button>
     <button class="secondaire" data-action="ics" data-quoi="rdv">Rendez-vous seulement (${nbRdv})</button>
     <button class="secondaire" data-action="ics" data-quoi="meds">Prises seulement (${nbMeds} médicament${nbMeds > 1 ? 's' : ''})</button>
-  </div>
+  </div>`}
   ${partageFichiersPossible() ? `<div class="ligne-actions"><button class="secondaire" data-action="ics" data-quoi="tout" data-partager="1">Partager le fichier .ics (iPhone)…</button></div>
   <p class="meta">Sur iPhone : si « Exporter » n’ouvre pas directement l’ajout au Calendrier, utilise « Partager », puis « Enregistrer dans Fichiers ». Ouvre ensuite le fichier depuis l’app Fichiers. Fais d’abord un essai avec les données fictives.</p>` : ''}
   <p class="meta">Après une modification de tes données, supprime les anciens événements (ou le calendrier dédié) avant d’importer le nouveau fichier, pour éviter les doublons.</p>
@@ -1378,6 +1382,9 @@ function rendre(nav) {
 }
 function afficherBandeaux() {
   document.getElementById('bandeau-demo').hidden = !D.fictif;
+  const bp = document.getElementById('bandeau-proche');
+  bp.hidden = !D.lectureSeule;
+  if (D.lectureSeule) bp.textContent = `Mode proche — lecture seule${D.meta && D.meta.derniere_mise_a_jour ? ` · données du ${D.meta.derniere_mise_a_jour.split('-').reverse().join('/')}` : ''}`;
   const be = document.getElementById('bandeau-erreur');
   be.hidden = !ERREUR_CHARGEMENT; be.textContent = ERREUR_CHARGEMENT;
   document.getElementById('bandeau-stockage').hidden = stockageOK;
@@ -1622,6 +1629,7 @@ function partageFichiersPossible() {
   catch (e) { return false; }
 }
 function exporterIcs(quoi, partager) {
+  if (D.lectureSeule) quoi = 'rdv';
   const { texte, nb } = genererIcs(quoi);
   if (!nb) { alert('Aucun élément confirmé à exporter.'); return; }
   const noms = { tout: 'mes-soins', rdv: 'mes-soins-rendez-vous', meds: 'mes-soins-prises' };
@@ -1666,7 +1674,7 @@ function verifierRappels() {
     if (debut < t) return;
     reglages.rdvDelais.forEach(m => emettre(`rdv|${r._id}|${m}`, debut - m * 60000, `Rendez-vous : ${r.titre}`, `${jourLong(r.date)} à ${heureFr(r.heure)}${r.lieu ? ' — ' + r.lieu : ''}`, '#/calendrier'));
   });
-  if (reglages.medActif) {
+  if (reglages.medActif && !D.lectureSeule) {
     const prises = lirePrises();
     prisesDuJour(dateVersIso(maintenant)).forEach(p => {
       if (prises[p.cle]) return;

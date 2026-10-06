@@ -168,6 +168,14 @@ Ouvre le menu **Données** pour :
 
 Vider les données de navigation du navigateur efface aussi le suivi : pense aux sauvegardes.
 
+## 4 bis. Partager avec des proches (mode proche)
+Ajoute `"lecture_seule": true` dans la section `meta` d'une copie du fichier de données, ou demande un « code proche ». Une fois importée, l'application passe en **lecture seule** :
+- pas de cases à cocher, pas de bouton « réalisé », pas de rappels de prise ;
+- un bandeau indique « Mode proche » et la date des données ;
+- l'export calendrier ne contient que les rendez-vous.
+
+Pour que tes proches aient des informations à jour, envoie-leur un nouveau code à chaque changement. Utilise uniquement une messagerie chiffrée (iMessage, WhatsApp, Signal) : le code contient des données de santé.
+
 ## 5. Vérification automatique (facultatif)
 Si Node.js est installé : `npm i -D playwright`, puis `node outils/verifier-parcours.mjs`.
 Le script vérifie notamment :
