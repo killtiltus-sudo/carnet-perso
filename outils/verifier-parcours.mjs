@@ -182,6 +182,16 @@ const perso = {
 await page.setInputFiles('#fichier-donnees', { name: 'perso.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(perso)) });
 verifier((await page.locator('main').innerText()).includes('Import réussi'), 'fichier valide importé');
 verifier(!(await page.locator('#bandeau-demo').isVisible()), 'bandeau démo retiré pour des données réelles');
+const zlib = await import('node:zlib');
+await page.goto(urlFichier + '#/donnees');
+await page.fill('#code-import', 'MS1:' + zlib.gzipSync(Buffer.from(JSON.stringify(perso))).toString('base64').replace(/(.{76})/g, '$1\n'));
+await page.click('button[data-action="importer-code"]');
+await page.waitForTimeout(300);
+verifier((await page.locator('main').innerText()).includes('Import réussi'), 'import par code compressé (avec retours à la ligne)');
+await page.fill('#code-import', 'MS1:pas-un-code');
+await page.click('button[data-action="importer-code"]');
+await page.waitForTimeout(200);
+verifier((await page.locator('main').innerText()).includes('Import refusé'), 'code invalide refusé');
 await page.goto(urlFichier + '#/prises');
 const pr = await page.locator('main').innerText();
 verifier(pr.includes('Médicament correct') && !pr.includes('Horaire mal écrit') && !pr.includes('Dose vide') && !pr.includes('Dose à préciser'), 'seul le médicament complet apparaît dans les prises');

@@ -127,6 +127,7 @@ button.secondaire, .bouton.secondaire { background: var(--primaire-doux); color:
 button.danger { background: var(--danger-fond); color: var(--danger); }
 button:disabled { opacity: .5; cursor: not-allowed; }
 button.petit, .bouton.petit { min-height: 38px; padding: 4px 14px; font-size: 15px; border-radius: 12px; }
+textarea { font: 13px/1.4 ui-monospace, Menlo, monospace; width: 100%; padding: 10px 12px; border: 1px solid var(--bord); border-radius: 14px; background: var(--surface); color: var(--texte); resize: vertical; }
 input[type="text"], input[type="search"], input[type="date"], select {
   font: inherit; font-size: 17px; min-height: 48px; padding: 10px 14px; border: 1px solid var(--bord); border-radius: 14px;
   background: var(--surface); color: var(--texte); width: 100%;
@@ -585,7 +586,7 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
 
 // ---------- Constantes ----------
 const PREFIXE = 'mesSoins.v1.';
-const VERSION_APP = '1.4 — 06/10/2026';
+const VERSION_APP = '1.5 — 06/10/2026';
 const MESSAGE_AUCUNE_CONSIGNE = 'Aucune consigne confirmée dans les documents enregistrés. Contacte ton équipe soignante ou ton pharmacien.';
 const TYPES_RDV = {
   consultation: 'Consultation',
@@ -1303,6 +1304,11 @@ function vueDonnees() {
   <div class="ligne-actions"><label class="bouton" for="fichier-donnees">Choisir mon fichier de données…</label></div>
   <input type="file" id="fichier-donnees" class="sr">
   <p class="meta">Sur iPhone : choisis « Parcourir », puis l’emplacement où tu as enregistré <code>donnees_medicales.json</code> (par exemple « Sur mon iPhone » ou « Téléchargements »).</p>
+  <h3 style="margin-top:18px">Ou coller un code d’import</h3>
+  <p class="meta">Un code commençant par « MS1: » contient tes données compressées. Il est décodé uniquement sur cet appareil.</p>
+  <label class="sr" for="code-import">Code d’import</label>
+  <textarea id="code-import" rows="4" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Colle ici le code MS1:…"></textarea>
+  <div class="ligne-actions"><button data-action="importer-code">Importer le code</button></div>
   <div class="ligne-actions">
     <button class="secondaire" data-action="modele">Télécharger le modèle (données fictives)</button>
     ${SOURCE.type === 'import' ? '<button class="secondaire" data-action="revenir-demo">Revenir aux données de démonstration</button>' : ''}
@@ -1429,6 +1435,12 @@ document.addEventListener('click', ev => {
   else if (a === 'marquer-realise') marquerRealise(b.dataset.id, true);
   else if (a === 'annuler-realise') marquerRealise(b.dataset.id, false);
   else if (a === 'effacer-symptome') { etat.symptome = ''; etat.saisieSymptome = ''; rendre(false); document.getElementById('sel-symptome').focus(); }
+  else if (a === 'importer-code') {
+    const zone = document.getElementById('code-import');
+    decoderCodeImport(zone ? zone.value : '')
+      .then(texte => importerTexte(texte, 'code d’import'))
+      .catch(e => { etat.rapportImport = { ok: false, html: `<p><strong>Import refusé :</strong> ${esc(e.message)}</p><p>Tes données précédentes sont conservées.</p>` }; rendre(false); });
+  }
   else if (a === 'ics') exporterIcs(b.dataset.quoi, b.dataset.partager === '1');
   else if (a === 'permission-notif') { Notification.requestPermission().then(() => rendre(false)); }
   else if (a === 'test-rappel') afficherRappel('test', 'Rappel de test', 'Voici à quoi ressemble un rappel à l’écran. Il ne s’affiche que si l’application est ouverte.');
@@ -1487,13 +1499,31 @@ document.addEventListener('submit', ev => {
 function lireFichier(f) {
   return new Promise((ok, ko) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => ko(r.error); r.readAsText(f, 'utf-8'); });
 }
+// Code d'import : « MS1: » + données JSON compressées (gzip) en base64. Décodé uniquement sur l'appareil.
+async function decoderCodeImport(texte) {
+  const brut = String(texte || '').trim();
+  if (brut.startsWith('{')) return brut;
+  const m = brut.replace(/\s+/g, '').match(/^MS1:([A-Za-z0-9+/=]+)$/);
+  if (!m) throw new Error('Code non reconnu : il doit commencer par « MS1: » (ou être le contenu du fichier, qui commence par « { »).');
+  if (typeof DecompressionStream === 'undefined') throw new Error('Ce navigateur ne sait pas lire les codes compressés : mets à jour iOS ou importe le fichier.');
+  const octets = Uint8Array.from(atob(m[1]), c => c.charCodeAt(0));
+  const flux = new Blob([octets]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return await new Response(flux).text();
+}
 async function importerDonnees(fichier) {
+  let texte;
+  try { texte = await lireFichier(fichier); }
+  catch (e) { etat.rapportImport = { ok: false, html: `<p><strong>Lecture impossible :</strong> ${esc(e && e.message)}</p>` }; rendre(false); return; }
+  return importerTexte(texte, fichier.name);
+}
+async function importerTexte(texte, nomSource) {
   let brut;
-  try { brut = JSON.parse(await lireFichier(fichier)); }
+  try { brut = JSON.parse(texte); }
   catch (e) {
-    etat.rapportImport = { ok: false, html: `<p><strong>Import refusé :</strong> le fichier n’est pas un JSON valide.</p><p class="meta">${esc(e.message)}</p><p>Tes données précédentes sont conservées.</p>` };
+    etat.rapportImport = { ok: false, html: `<p><strong>Import refusé :</strong> le contenu n’est pas un JSON valide.</p><p class="meta">${esc(e.message)}</p><p>Tes données précédentes sont conservées.</p>` };
     rendre(false); return;
   }
+  const fichier = { name: nomSource };
   const V = validerDonnees(brut);
   if (V.structure.length && !V.rendezVous.length && !V.medicaments.length && !V.consignes.length) {
     etat.rapportImport = { ok: false, html: `<p><strong>Import refusé :</strong> structure non reconnue.</p><ul class="raisons">${V.structure.map(s => `<li>${esc(s)}</li>`).join('')}</ul><p>Tes données précédentes sont conservées.</p>` };
