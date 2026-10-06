@@ -757,7 +757,7 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
 // ---------- Constantes ----------
 const PREFIXE = 'mesSoins.v1.';
 const CATEGORIES_DOC = { prise_de_sang: 'Prise de sang', compte_rendu: 'Compte rendu', imagerie: 'Imagerie', ordonnance: 'Ordonnance' };
-const VERSION_APP = '1.14 — 06/10/2026';
+const VERSION_APP = '1.15 — 06/10/2026';
 const MESSAGE_AUCUNE_CONSIGNE = 'Aucune consigne confirmée dans les documents enregistrés. Contacte ton équipe soignante ou ton pharmacien.';
 const TYPES_RDV = {
   consultation: 'Consultation',
@@ -1433,7 +1433,7 @@ function blocRecettes(g) {
     ${completes.length ? `<h3>${g.categorie === 'recettes' ? 'Recettes' : 'Recettes proposées dans le livret'}</h3><ul class="liste-recettes">${completes.map(r => `<li><details class="recette" id="recette-${esc(r.id || '')}">
       <summary><span>${esc(r.titre)}${r.infos.length ? `<span class="sous">${esc(r.infos.join(' · '))}</span>` : ''}</span><span class="chevron" aria-hidden="true">›</span></summary>
       <div class="corps-recette">
-        ${r.photo ? `<div class="photo-recette" data-photo="${esc(r.photo)}" data-alt="${esc('Photo : ' + r.titre)}"></div>` : ''}
+        ${r.photo ? `<div class="photo-recette" data-photo="${esc(r.photo)}" data-alt="${esc('Illustration : ' + r.titre)}"></div>` : ''}
         ${r.intro ? `<p>${esc(r.intro)}</p>` : ''}
         ${r.ingredients.length ? `<h4>Ingrédients</h4>${lignesRecette(r.ingredients, 'ul')}` : ''}
         ${r.preparation.length ? `<h4>Préparation</h4>${lignesRecette(r.preparation, 'ul')}` : ''}
@@ -2509,7 +2509,9 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || estServeu
   navigator.serviceWorker.register('sw.js').catch(() => { /* fonctionnement en ligne uniquement */ });
 }
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-Promise.all([chargerDonnees(), chargerDocsLocaux()]).then(() => {
+// Les documents du téléphone sont lus à part, pour ne pas retarder le premier affichage.
+chargerDocsLocaux().then(() => { if (['documents', 'ajouter-document'].includes(routeCourante())) rendre(false); });
+chargerDonnees().then(() => {
   rendre(false);
   synchroniser(false);
   tic();
