@@ -585,6 +585,7 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
 
 // ---------- Constantes ----------
 const PREFIXE = 'mesSoins.v1.';
+const VERSION_APP = '1.4 — 06/10/2026';
 const MESSAGE_AUCUNE_CONSIGNE = 'Aucune consigne confirmée dans les documents enregistrés. Contacte ton équipe soignante ou ton pharmacien.';
 const TYPES_RDV = {
   consultation: 'Consultation',
@@ -1323,7 +1324,8 @@ function vueDonnees() {
     <li>Les données restent dans le stockage local de ce navigateur, sur cet appareil.</li>
     <li>Les fichiers exportés (.ics, sauvegarde) contiennent des données de santé : garde-les en lieu sûr.</li>
   </ul>
-  <div class="ligne-actions"><button class="danger" data-action="tout-effacer">Effacer toutes les données de cet appareil</button></div>`;
+  <div class="ligne-actions"><button class="danger" data-action="tout-effacer">Effacer toutes les données de cet appareil</button></div>
+  <p class="meta" style="margin-top:20px">Version de l’application : ${esc(VERSION_APP)}</p>`;
 }
 
 function vuePlus() {

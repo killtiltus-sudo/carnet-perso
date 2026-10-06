@@ -228,6 +228,10 @@ await page.reload();
 await contexte.setOffline(true);
 await page.reload();
 verifier((await page.locator('main h1').innerText()).length > 0, 'fonctionne hors connexion après le premier chargement');
+await contexte.setOffline(false);
+fs.writeFileSync(path.join(tmp, 'index.html'), fs.readFileSync(path.join(tmp, 'index.html'), 'utf-8').replace('>Bonjour<', '>Bonjour (nouvelle version)<'));
+await page.reload();
+verifier((await page.locator('main h1').innerText()).includes('nouvelle version'), 'une mise à jour publiée s’affiche dès la réouverture');
 await contexte.close();
 serveur.close();
 
