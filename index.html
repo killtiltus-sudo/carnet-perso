@@ -265,6 +265,7 @@ details.recette h4 { margin: 12px 0 4px; font-size: 13px; text-transform: upperc
 details.recette ul, details.recette ol { margin: 0; padding-left: 20px; }
 details.recette li { margin-bottom: 4px; }
 details.recette li.sous-titre { list-style: none; margin-left: -20px; font-weight: 800; margin-top: 8px; }
+details.recette .photo-recette img { display: block; width: 100%; max-height: 260px; object-fit: cover; border-radius: 12px; margin: 2px 0 8px; background: var(--surface-2); }
 details.recette .astuce { margin-top: 10px; padding: 8px 10px; border-radius: 10px; background: var(--primaire-doux); }
 .recette-nom { padding: 8px 12px; border-radius: 12px; background: var(--surface); }
 
@@ -756,7 +757,7 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
 // ---------- Constantes ----------
 const PREFIXE = 'mesSoins.v1.';
 const CATEGORIES_DOC = { prise_de_sang: 'Prise de sang', compte_rendu: 'Compte rendu', imagerie: 'Imagerie', ordonnance: 'Ordonnance' };
-const VERSION_APP = '1.13 — 06/10/2026';
+const VERSION_APP = '1.14 — 06/10/2026';
 const MESSAGE_AUCUNE_CONSIGNE = 'Aucune consigne confirmée dans les documents enregistrés. Contacte ton équipe soignante ou ton pharmacien.';
 const TYPES_RDV = {
   consultation: 'Consultation',
@@ -849,6 +850,7 @@ function dateValide(s) {
   return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
 }
 
+const RE_FICHIER_CHIFFRE = /^documents\/[A-Za-z0-9_-]+\.bin$/;
 // Recettes d'une fiche alimentation : un nom seul (texte) ou une recette recopiée en entier.
 function validerRecettes(v, idFiche, R) {
   if (v === undefined) return [];
@@ -856,7 +858,8 @@ function validerRecettes(v, idFiche, R) {
   const lignes = l => Array.isArray(l) ? l.filter(x => (typeof x === 'string' && x.trim()) || (x && typeof x.sous_titre === 'string')) : [];
   return v.flatMap(r => {
     if (typeof r === 'string') return r.trim() ? [r.trim()] : [];
-    if (r && typeof r === 'object' && !texteManquant(r.titre)) return [Object.assign({}, r, { infos: lignes(r.infos), ingredients: lignes(r.ingredients), preparation: lignes(r.preparation) })];
+    if (r && typeof r === 'object' && !texteManquant(r.titre)) return [Object.assign({}, r, { infos: lignes(r.infos), ingredients: lignes(r.ingredients), preparation: lignes(r.preparation),
+      photo: typeof r.photo === 'string' && RE_FICHIER_CHIFFRE.test(r.photo) ? r.photo : '' })];
     R.avertissements.push(`Fiche « ${idFiche} » : une recette sans titre a été ignorée.`);
     return [];
   });
@@ -1430,6 +1433,7 @@ function blocRecettes(g) {
     ${completes.length ? `<h3>${g.categorie === 'recettes' ? 'Recettes' : 'Recettes proposées dans le livret'}</h3><ul class="liste-recettes">${completes.map(r => `<li><details class="recette" id="recette-${esc(r.id || '')}">
       <summary><span>${esc(r.titre)}${r.infos.length ? `<span class="sous">${esc(r.infos.join(' · '))}</span>` : ''}</span><span class="chevron" aria-hidden="true">›</span></summary>
       <div class="corps-recette">
+        ${r.photo ? `<div class="photo-recette" data-photo="${esc(r.photo)}" data-alt="${esc('Photo : ' + r.titre)}"></div>` : ''}
         ${r.intro ? `<p>${esc(r.intro)}</p>` : ''}
         ${r.ingredients.length ? `<h4>Ingrédients</h4>${lignesRecette(r.ingredients, 'ul')}` : ''}
         ${r.preparation.length ? `<h4>Préparation</h4>${lignesRecette(r.preparation, 'ul')}` : ''}
@@ -1529,6 +1533,28 @@ async function octetsFichier(x, f) {
   if (!rep.ok) throw new Error(`Fichier introuvable (erreur ${rep.status}). Vérifie ta connexion.`);
   return dechiffrerOctets(await rep.json(), ab.cle);
 }
+// Photos des recettes : publiées chiffrées, déchiffrées à l'ouverture de la recette (gardées en mémoire ensuite).
+const photosRecettes = new Map();
+async function chargerPhotoRecette(det) {
+  const zone = det.querySelector('.photo-recette[data-photo]');
+  if (!zone || zone.dataset.charge) return;
+  zone.dataset.charge = '1';
+  const chemin = zone.dataset.photo;
+  try {
+    let url = photosRecettes.get(chemin);
+    if (!url) {
+      const ab = stock.lire('abonnement', null);
+      if (!ab || !ab.cle || !window.crypto || !crypto.subtle) { zone.remove(); return; }
+      const rep = await fetch(chemin);
+      if (!rep.ok) throw new Error(String(rep.status));
+      url = URL.createObjectURL(new Blob([await dechiffrerOctets(await rep.json(), ab.cle)], { type: 'image/jpeg' }));
+      photosRecettes.set(chemin, url);
+    }
+    const img = new Image(); img.alt = zone.dataset.alt || ''; img.src = url;
+    zone.replaceChildren(img);
+  } catch (e) { zone.remove(); }
+}
+document.addEventListener('toggle', ev => { if (ev.target.matches && ev.target.matches('details.recette') && ev.target.open) chargerPhotoRecette(ev.target); }, true);
 async function afficherApercuDocument() {
   libererApercus();
   const zone = document.getElementById('apercu-doc');

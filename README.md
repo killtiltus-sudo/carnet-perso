@@ -125,7 +125,7 @@ Les médicaments « si besoin », sans horaire fixe, se notent plutôt dans `con
 | `parties` | oui | Liste de `{ "titre": "…" (facultatif), "conseils": [ … ] }` |
 | `conseils` | au moins un confirmé | Textes **recopiés** du livret. Un passage illisible s'écrit `{ "texte": "…", "statut": "a_confirmer", "note": "…" }` : il est masqué et listé dans « À confirmer » |
 | `symptomes` | non | Mots de la recherche par symptôme qui affichent un lien vers cette fiche (correspondance exacte, au pluriel près) |
-| `recettes` | non | Liste de recettes : un nom seul (texte), ou une recette recopiée en entier `{ "id", "titre", "page", "intro", "infos": [ … ], "ingredients": [ … ], "preparation": [ … ], "astuce" }` (dans `ingredients` et `preparation`, `{ "sous_titre": "…" }` crée un intertitre). Elle s'ouvre au toucher. Une fiche `"categorie": "recettes"` peut ne contenir que des recettes |
+| `recettes` | non | Liste de recettes : un nom seul (texte), ou une recette recopiée en entier `{ "id", "titre", "page", "photo", "intro", "infos": [ … ], "ingredients": [ … ], "preparation": [ … ], "astuce" }` (dans `ingredients` et `preparation`, `{ "sous_titre": "…" }` crée un intertitre ; `photo` : image chiffrée `documents/….bin`, déchiffrée à l'ouverture). Elle s'ouvre au toucher. Une fiche `"categorie": "recettes"` peut ne contenir que des recettes |
 | `titre_livret` | non | Titre tel qu'écrit dans le livret |
 | `source` | **oui** | Sans source, la fiche n'est jamais affichée |
 
