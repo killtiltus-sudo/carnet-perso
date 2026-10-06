@@ -610,7 +610,7 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
 
 // ---------- Constantes ----------
 const PREFIXE = 'mesSoins.v1.';
-const VERSION_APP = '1.10 — 06/10/2026';
+const VERSION_APP = '1.11 — 06/10/2026';
 const MESSAGE_AUCUNE_CONSIGNE = 'Aucune consigne confirmée dans les documents enregistrés. Contacte ton équipe soignante ou ton pharmacien.';
 const TYPES_RDV = {
   consultation: 'Consultation',
@@ -1559,8 +1559,9 @@ document.addEventListener('click', ev => {
   else if (a === 'importer-code') {
     const zone = document.getElementById('code-import');
     const valeur = zone ? zone.value.trim() : '';
-    if (valeur.startsWith('MS2:')) { activerAbonnement(valeur); return; }
-    decoderCodeImport(valeur)
+    const code = extraireCode(valeur);
+    if (code && code.type === 'MS2') { activerAbonnement(code.texte); return; }
+    decoderCodeImport(code ? code.texte : valeur)
       .then(texte => importerTexte(texte, 'code d’import'))
       .catch(e => { etat.rapportImport = { ok: false, html: `<p><strong>Import refusé :</strong> ${esc(e.message)}</p><p>Tes données précédentes sont conservées.</p>` }; rendre(false); });
   }
@@ -1633,14 +1634,33 @@ document.addEventListener('submit', ev => {
 function lireFichier(f) {
   return new Promise((ok, ko) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => ko(r.error); r.readAsText(f, 'utf-8'); });
 }
+// Retrouve un code « MS1: » ou « MS2: » dans le texte collé, même s'il est entouré d'un message,
+// coupé en lignes, en minuscules ou accompagné de caractères invisibles (copie depuis Messages).
+function extraireCode(texte) {
+  const brut = String(texte || '').replace(/[\u200B-\u200D\u2060\uFEFF]/g, '');
+  const compact = brut.replace(/\s+/g, '');
+  let m = compact.match(/^(ms[12]):\/{0,2}([A-Za-z0-9_\-+/=]+)$/i);
+  if (!m) m = brut.match(/(ms[12])\s*:\s*\/{0,2}([A-Za-z0-9_\-+/=]{20,})/i);
+  if (!m) return null;
+  const type = m[1].toUpperCase();
+  return { type, texte: `${type}:${m[2]}` };
+}
+function base64Normalise(s) {
+  const b = s.replace(/-/g, '+').replace(/_/g, '/').replace(/=+$/, '');
+  return b + '==='.slice((b.length + 3) % 4);
+}
+const MESSAGE_CODE_NON_RECONNU = 'Code non reconnu. Copie uniquement le code qui commence par « MS2: » (ou « MS1: »), puis colle-le ici.';
 // Code d'import : « MS1: » + données JSON compressées (gzip) en base64. Décodé uniquement sur l'appareil.
 async function decoderCodeImport(texte) {
   const brut = String(texte || '').trim();
   if (brut.startsWith('{')) return brut;
-  const m = brut.replace(/\s+/g, '').match(/^MS1:([A-Za-z0-9+/=]+)$/);
-  if (!m) throw new Error('Code non reconnu : il doit commencer par « MS1: » (ou être le contenu du fichier, qui commence par « { »).');
+  const code = extraireCode(brut);
+  const m = code && code.type === 'MS1' ? [null, code.texte.slice(4)] : null;
+  if (!m) throw new Error(MESSAGE_CODE_NON_RECONNU);
   if (typeof DecompressionStream === 'undefined') throw new Error('Ce navigateur ne sait pas lire les codes compressés : mets à jour iOS ou importe le fichier.');
-  const octets = Uint8Array.from(atob(m[1]), c => c.charCodeAt(0));
+  let octets;
+  try { octets = Uint8Array.from(atob(base64Normalise(m[1])), c => c.charCodeAt(0)); }
+  catch (e) { throw new Error('Code incomplet : il a sans doute été coupé lors du copier-coller.'); }
   const flux = new Blob([octets]).stream().pipeThrough(new DecompressionStream('gzip'));
   return await new Response(flux).text();
 }
@@ -1698,9 +1718,11 @@ async function dechiffrerEnveloppe(env, cle) {
   return contenu;
 }
 function decoderCodeAbonnement(texte) {
-  const m = String(texte).replace(/\s+/g, '').match(/^MS2:([A-Za-z0-9_\-+/=]+)$/);
-  if (!m) throw new Error('Code d’abonnement non reconnu.');
-  const json = JSON.parse(new TextDecoder().decode(b64Octets(m[1].replace(/-/g, '+').replace(/_/g, '/'))));
+  const code = extraireCode(texte);
+  if (!code || code.type !== 'MS2') throw new Error(MESSAGE_CODE_NON_RECONNU);
+  let json;
+  try { json = JSON.parse(new TextDecoder().decode(b64Octets(base64Normalise(code.texte.slice(4))))); }
+  catch (e) { throw new Error('Code incomplet : il a sans doute été coupé lors du copier-coller. Il doit finir par les mêmes caractères que dans le message reçu.'); }
   if (!json || typeof json.f !== 'string' || typeof json.k !== 'string' || !/^[A-Za-z0-9._-]+\.chiffre\.json$/.test(json.f)) throw new Error('Code d’abonnement incomplet.');
   return { fichier: json.f, cle: json.k, role: json.r === 'proche' ? 'proche' : 'patient' };
 }
