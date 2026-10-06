@@ -5,7 +5,6 @@
     "description": "DONNÉES FICTIVES DE DÉMONSTRATION. Aucune de ces informations ne correspond à un vrai traitement. Remplace-les par les informations validées de tes documents, puis passe « donnees_fictives » à false.",
     "derniere_mise_a_jour": "2026-10-05"
   },
-
   "rendez_vous": [
     {
       "id": "rdv-demo-01",
@@ -57,7 +56,9 @@
       "id": "rdv-demo-05",
       "type": "chimiotherapie",
       "titre": "Séance de chimiothérapie — cycle 2 (DÉMO)",
-      "types_associes": ["immunotherapie"],
+      "types_associes": [
+        "immunotherapie"
+      ],
       "date": "2026-10-08",
       "heure": "08:30",
       "duree_minutes": 360,
@@ -120,7 +121,6 @@
       "source": "Planning fictif de démonstration"
     }
   ],
-
   "medicaments": [
     {
       "id": "med-demo-a",
@@ -129,7 +129,10 @@
       "nom_boite_source": "Exemple fictif",
       "dose": "1 comprimé (exemple fictif)",
       "voie": "orale",
-      "horaires": ["08:00", "20:00"],
+      "horaires": [
+        "08:00",
+        "20:00"
+      ],
       "date_debut": "2026-09-17",
       "date_fin": "2026-12-31",
       "consignes_prise": "Exemple fictif : pendant le repas.",
@@ -141,8 +144,14 @@
       "nom": "Médicament DÉMO B (fictif)",
       "dose": "1 gélule (exemple fictif)",
       "voie": "orale",
-      "horaires": ["08:00"],
-      "jours": ["lundi", "mercredi", "vendredi"],
+      "horaires": [
+        "08:00"
+      ],
+      "jours": [
+        "lundi",
+        "mercredi",
+        "vendredi"
+      ],
       "date_debut": "2026-09-17",
       "date_fin": "2026-12-31",
       "statut": "confirme",
@@ -153,7 +162,9 @@
       "nom": "Médicament DÉMO C (fictif)",
       "dose": "2 comprimés (exemple fictif)",
       "voie": "orale",
-      "horaires": ["12:00"],
+      "horaires": [
+        "12:00"
+      ],
       "date_debut": "2026-10-08",
       "date_fin": "2026-10-12",
       "statut": "confirme",
@@ -164,8 +175,14 @@
       "nom": "Injection DÉMO F (fictif)",
       "dose": "1 injection (exemple fictif)",
       "voie": "sous-cutanée, par infirmier à domicile (fictif)",
-      "horaires": ["09:00"],
-      "dates": ["2026-10-10", "2026-10-11", "2026-10-12"],
+      "horaires": [
+        "09:00"
+      ],
+      "dates": [
+        "2026-10-10",
+        "2026-10-11",
+        "2026-10-12"
+      ],
       "au_calendrier": true,
       "calendrier_titre": "Injection DÉMO à domicile (fictif)",
       "calendrier_lieu": "À domicile",
@@ -176,7 +193,9 @@
       "id": "med-demo-d",
       "nom": "Médicament DÉMO D (fictif)",
       "dose": "? (illisible sur l'ordonnance)",
-      "horaires": ["21:00"],
+      "horaires": [
+        "21:00"
+      ],
       "date_debut": "2026-09-17",
       "date_fin": "2026-12-31",
       "statut": "confirme",
@@ -193,12 +212,14 @@
       "source": "Échange fictif avec l'équipe"
     }
   ],
-
   "consignes_symptomes": [
     {
       "id": "cs-demo-01",
       "symptome": "Nausées",
-      "synonymes": ["Envie de vomir", "Nausée"],
+      "synonymes": [
+        "Envie de vomir",
+        "Nausée"
+      ],
       "consigne": "Exemple fictif : texte de consigne recopié depuis la fiche de démonstration.",
       "medicament": "Médicament DÉMO F (fictif)",
       "posologie": "Texte de posologie fictif, recopié tel quel depuis la fiche",
@@ -209,7 +230,9 @@
     {
       "id": "cs-demo-02",
       "symptome": "Fièvre",
-      "synonymes": ["Température"],
+      "synonymes": [
+        "Température"
+      ],
       "consigne": "Exemple fictif : appeler le numéro indiqué sur la fiche de démonstration.",
       "statut": "confirme",
       "source": "Fiche fictive « Après la chimiothérapie » (démonstration)",
@@ -234,11 +257,71 @@
       "_explication": "Exemple volontairement incomplet : marqué « confirme », mais un médicament est indiqué sans posologie. La validation le refuse."
     }
   ],
-
+  "conseils_alimentaires": [
+    {
+      "id": "al-demo-01",
+      "categorie": "en_cas_de",
+      "situation": "Nausées (DÉMO)",
+      "titre_livret": "Livret fictif — page nausées",
+      "symptomes": [
+        "Nausées",
+        "Vomissements"
+      ],
+      "parties": [
+        {
+          "conseils": [
+            "Conseil alimentaire fictif n° 1, recopié du livret de démonstration.",
+            "Conseil alimentaire fictif n° 2.",
+            {
+              "texte": "Conseil fictif mal lu sur la photo.",
+              "statut": "a_confirmer",
+              "note": "Photo floue (exemple fictif)."
+            }
+          ]
+        }
+      ],
+      "recettes": [
+        "Recette fictive A"
+      ],
+      "statut": "confirme",
+      "source": "Livret alimentation fictif (démonstration)"
+    },
+    {
+      "id": "al-demo-02",
+      "categorie": "quotidien",
+      "situation": "Au quotidien (DÉMO)",
+      "parties": [
+        {
+          "titre": "Sous-titre fictif",
+          "conseils": [
+            "Conseil fictif pour tous les jours."
+          ]
+        }
+      ],
+      "statut": "confirme",
+      "source": "Livret alimentation fictif (démonstration)"
+    },
+    {
+      "id": "al-demo-03",
+      "categorie": "en_cas_de",
+      "situation": "Constipation (DÉMO)",
+      "symptomes": [
+        "Constipation"
+      ],
+      "parties": [
+        {
+          "conseils": [
+            "Fiche fictive non validée."
+          ]
+        }
+      ],
+      "statut": "a_confirmer",
+      "source": "Livret alimentation fictif (démonstration)"
+    }
+  ],
   "remarques": [
     "Exemple fictif de remarque : deux documents donnent des informations différentes pour un même médicament."
   ],
-
   "liste_symptomes": [
     "Nausées",
     "Fièvre",
@@ -248,7 +331,6 @@
     "Constipation",
     "Douleur"
   ],
-
   "contacts": [
     {
       "id": "ct-demo-01",

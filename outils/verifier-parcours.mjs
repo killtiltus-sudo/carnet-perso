@@ -149,12 +149,37 @@ await page.fill('#txt-symptome', 'mal de tête');
 await page.click('#form-symptome button[type="submit"]');
 verifier((await page.locator('#resultat-symptome').innerText()).includes(MESSAGE), 'saisie libre inconnue : message d’absence');
 
+console.log('5b. Alimentation');
+await page.goto(urlFichier + '#/symptomes');
+await page.selectOption('#sel-symptome', 'Nausées');
+sym = await page.locator('#resultat-symptome').innerText();
+verifier(sym.includes('Dans le livret alimentation') && sym.includes('Nausées (DÉMO)'), 'recherche « Nausées » : lien vers la fiche alimentation correspondante');
+await page.selectOption('#sel-symptome', 'Constipation');
+sym = await page.locator('#resultat-symptome').innerText();
+verifier(sym.includes(MESSAGE) && !sym.includes('livret alimentation'), 'fiche alimentation « a_confirmer » : aucun lien');
+await page.fill('#txt-symptome', 'douleur');
+await page.click('#form-symptome button[type="submit"]');
+verifier(!(await page.locator('#resultat-symptome').innerText()).includes('livret alimentation'), 'pas de rapprochement approximatif');
+await page.selectOption('#sel-symptome', 'Nausées');
+await page.click('#resultat-symptome a[data-action="voir-alim"]');
+await page.waitForFunction(() => location.hash === '#/alimentation');
+verifier(await page.locator('#alim-al-demo-01').evaluate(d => d.open), 'lien : la fiche « Nausées » s’ouvre dans l’onglet Alimentation');
+let alim = await page.locator('main').innerText();
+verifier(alim.includes('Conseil alimentaire fictif n° 1') && alim.includes('Recette fictive A') && alim.includes('Source : Livret alimentation fictif'), 'conseils confirmés, recettes et source affichés');
+verifier(!alim.includes('mal lu sur la photo') && alim.includes('1 passage illisible'), 'passage « a_confirmer » masqué et signalé');
+verifier(!alim.includes('Constipation (DÉMO)') && alim.includes('1 fiche n’apparaît pas ici'), 'fiche « a_confirmer » non affichée');
+verifier(alim.indexOf('En cas de') < alim.indexOf('Au quotidien'), 'sections « En cas de… » puis « Au quotidien »');
+verifier((await page.locator('nav a[data-route="alimentation"]').getAttribute('aria-current')) === 'page', 'onglet Alimentation actif dans la barre');
+await page.locator('#alim-al-demo-02 summary').click();
+verifier((await page.locator('#alim-al-demo-02').innerText()).includes('Conseil fictif pour tous les jours'), 'fiche repliée : s’ouvre au toucher');
+await page.screenshot({ path: path.join(dossierCaptures, '5b-alimentation.png'), fullPage: true });
+
 console.log('6. À confirmer');
 await page.goto(urlFichier + '#/a-confirmer');
 const ac = await page.locator('main').innerText();
-for (const t of ['Scanner de contrôle', 'Heure manquante', 'Consultation infirmière', 'Médicament DÉMO D', 'Dose incomplète', 'Médicament DÉMO E', 'Diarrhée', 'Aphtes', 'sans posologie', 'Pharmacie Exemple', 'Téléphone manquant'])
+for (const t of ['Scanner de contrôle', 'Heure manquante', 'Consultation infirmière', 'Médicament DÉMO D', 'Dose incomplète', 'Médicament DÉMO E', 'Diarrhée', 'Aphtes', 'sans posologie', 'Pharmacie Exemple', 'Téléphone manquant', 'Constipation (DÉMO)', 'Passages illisibles', 'Photo floue (exemple fictif)'])
   verifier(ac.includes(t), `« ${t} » listé`);
-verifier((await page.locator('nav [data-compte]').first().textContent()).trim() === '7', 'compteur : 7 éléments à confirmer');
+verifier((await page.locator('nav [data-compte]').first().textContent()).trim() === '9', 'compteur : 9 éléments à confirmer');
 verifier(!(await page.locator('details.non-valide').first().evaluate(d => d.open)), 'valeurs non validées repliées par défaut');
 await page.screenshot({ path: path.join(dossierCaptures, '6-a-confirmer.png'), fullPage: true });
 
@@ -261,6 +286,8 @@ await page.goto(urlFichier + '#/rappels');
 const [tp] = await Promise.all([page.waitForEvent('download'), page.click('button[data-action="ics"][data-quoi="rdv"]')]);
 const icsP = fs.readFileSync(await tp.path(), 'utf-8');
 verifier(icsP.includes('rdv-demo-03') && icsP.includes('soin-med-demo-f') && !icsP.includes('med-demo-a') && !icsP.includes('RRULE'), 'export calendrier : rendez-vous et soins à domicile, sans les prises de médicaments');
+await page.goto(urlFichier + '#/alimentation');
+verifier((await page.locator('main').innerText()).includes('Nausées (DÉMO)'), 'onglet Alimentation disponible en mode proche');
 verifier(erreurs.length === 0, 'aucune erreur JavaScript (mode proche)');
 await contexte.close();
 
@@ -411,8 +438,9 @@ await contexte.close();
 await page.goto(urlFichier + '#/donnees');
 await page.setInputFiles('#fichier-donnees', path.join(dossier, 'donnees_medicales.exemple.json'));
 const debordements = [];
-for (const r of ['accueil', 'calendrier', 'prises', 'historique', 'rappels', 'a-confirmer', 'donnees', 'plus']) {
+for (const r of ['accueil', 'calendrier', 'prises', 'alimentation', 'historique', 'rappels', 'a-confirmer', 'donnees', 'plus']) {
   await page.goto(urlFichier + '#/' + r);
+  if (r === 'alimentation') await page.evaluate(() => document.querySelectorAll('details').forEach(d => { d.open = true; }));
   if (await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)) debordements.push(r);
 }
 await page.goto(urlFichier + '#/symptomes');

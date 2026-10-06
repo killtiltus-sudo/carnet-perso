@@ -116,6 +116,19 @@ Les médicaments « si besoin », sans horaire fixe, se notent plutôt dans `con
 | `date_document` | non | `"2026-09-17"` |
 | `nom_boite`, `nom_boite_source` | non | Nom écrit sur la boîte du médicament indiqué, et sa source |
 
+**Conseils alimentaires** (`conseils_alimentaires`, facultatif — onglet « Alimentation »)
+
+| Champ | Obligatoire pour « confirmé » | Remarque |
+|---|---|---|
+| `situation` | oui | Titre de la fiche, par exemple `"Constipation"` |
+| `categorie` | non | `"en_cas_de"` (par défaut) ou `"quotidien"` : section où la fiche est rangée |
+| `parties` | oui | Liste de `{ "titre": "…" (facultatif), "conseils": [ … ] }` |
+| `conseils` | au moins un confirmé | Textes **recopiés** du livret. Un passage illisible s'écrit `{ "texte": "…", "statut": "a_confirmer", "note": "…" }` : il est masqué et listé dans « À confirmer » |
+| `symptomes` | non | Mots de la recherche par symptôme qui affichent un lien vers cette fiche (correspondance exacte, au pluriel près) |
+| `recettes` | non | Noms des recettes proposées dans le livret |
+| `titre_livret` | non | Titre tel qu'écrit dans le livret |
+| `source` | **oui** | Sans source, la fiche n'est jamais affichée |
+
 **Autres sections** :
 - `liste_symptomes` : symptômes proposés dans la liste de recherche ;
 - `contacts` : `nom`, `role`, `telephone`, `statut`, `source` ;

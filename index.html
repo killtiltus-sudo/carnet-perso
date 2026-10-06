@@ -232,6 +232,21 @@ dl.details dt:first-child { margin-top: 0; }
 dl.details dd { margin: 2px 0 0; overflow-wrap: anywhere; }
 .message-aucune { font-size: 18px; font-weight: 700; }
 
+/* Alimentation */
+.alim { padding: 0; overflow: hidden; }
+.alim > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 14px 16px; min-height: 56px; font-weight: 800; font-size: 17px; }
+.alim > summary::-webkit-details-marker { display: none; }
+.alim > summary .sous { display: block; font-weight: 500; font-size: 14px; color: var(--texte-2); }
+.alim > summary .chevron { margin-left: auto; color: var(--texte-2); transition: transform .15s; }
+.alim[open] > summary .chevron { transform: rotate(90deg); }
+.alim .icone-alim { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--primaire-doux); color: var(--primaire-fort); }
+.alim .corps-alim { padding: 0 16px 16px; }
+.alim h3 { font-size: 16px; margin: 14px 0 6px; }
+.alim ul.conseils { margin: 0; padding-left: 20px; }
+.alim ul.conseils li { margin-bottom: 6px; }
+.alim .recettes { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); font-size: 15px; }
+.alim .incomplet { margin-top: 10px; font-size: 14px; color: var(--alerte); }
+
 /* À confirmer */
 .non-valide { background: var(--alerte-fond); border-radius: 12px; padding: 10px 12px; margin-top: 10px; font-size: 15px; }
 .non-valide summary { cursor: pointer; font-weight: 800; color: var(--alerte); min-height: 32px; }
@@ -251,9 +266,9 @@ dl.details dd { margin: 2px 0 0; overflow-wrap: anywhere; }
 /* Navigation */
 nav.principale { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); padding-bottom: env(safe-area-inset-bottom); z-index: 20; box-shadow: 0 -1px 0 var(--bord); }
 nav.principale ul { list-style: none; margin: 0 auto; padding: 0; display: flex; max-width: 760px; }
-nav.principale li { flex: 1; }
+nav.principale li { flex: 1 1 auto; }
 nav.principale li.secondaire { display: none; }
-nav.principale a { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 2px 8px; font-size: 12px; font-weight: 600; color: var(--texte-2); text-decoration: none; min-height: 62px; position: relative; }
+nav.principale a { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 3px 8px; font-size: 11px; letter-spacing: -.01em; white-space: nowrap; font-weight: 600; color: var(--texte-2); text-decoration: none; min-height: 62px; position: relative; }
 nav.principale a[aria-current="page"] { color: var(--primaire); font-weight: 800; }
 nav.principale svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 nav.principale a[aria-current="page"] svg { stroke-width: 2.4; }
@@ -297,6 +312,7 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
     <li><a href="#/calendrier" data-route="calendrier"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendrier</a></li>
     <li><a href="#/prises" data-route="prises"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="18" height="7" rx="3.5"/><path d="M12 9v7"/></svg>Prises</a></li>
     <li><a href="#/symptomes" data-route="symptomes"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/></svg>Symptômes</a></li>
+    <li><a href="#/alimentation" data-route="alimentation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 21V3c-2 1.5-3 4-3 7v4h3"/></svg>Alimentation</a></li>
     <li class="secondaire"><a href="#/historique" data-route="historique"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 3"/></svg>Historique</a></li>
     <li class="secondaire"><a href="#/rappels" data-route="rappels"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"/></svg>Rappels</a></li>
     <li class="secondaire"><a href="#/a-confirmer" data-route="a-confirmer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg>À confirmer <span class="badge compte" data-compte hidden></span></a></li>
@@ -568,6 +584,68 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
    "_explication": "Exemple volontairement incomplet : marqué « confirme », mais un médicament est indiqué sans posologie. La validation le refuse."
   }
  ],
+ "conseils_alimentaires": [
+  {
+   "id": "al-demo-01",
+   "categorie": "en_cas_de",
+   "situation": "Nausées (DÉMO)",
+   "titre_livret": "Livret fictif — page nausées",
+   "symptomes": [
+    "Nausées",
+    "Vomissements"
+   ],
+   "parties": [
+    {
+     "conseils": [
+      "Conseil alimentaire fictif n° 1, recopié du livret de démonstration.",
+      "Conseil alimentaire fictif n° 2.",
+      {
+       "texte": "Conseil fictif mal lu sur la photo.",
+       "statut": "a_confirmer",
+       "note": "Photo floue (exemple fictif)."
+      }
+     ]
+    }
+   ],
+   "recettes": [
+    "Recette fictive A"
+   ],
+   "statut": "confirme",
+   "source": "Livret alimentation fictif (démonstration)"
+  },
+  {
+   "id": "al-demo-02",
+   "categorie": "quotidien",
+   "situation": "Au quotidien (DÉMO)",
+   "parties": [
+    {
+     "titre": "Sous-titre fictif",
+     "conseils": [
+      "Conseil fictif pour tous les jours."
+     ]
+    }
+   ],
+   "statut": "confirme",
+   "source": "Livret alimentation fictif (démonstration)"
+  },
+  {
+   "id": "al-demo-03",
+   "categorie": "en_cas_de",
+   "situation": "Constipation (DÉMO)",
+   "symptomes": [
+    "Constipation"
+   ],
+   "parties": [
+    {
+     "conseils": [
+      "Fiche fictive non validée."
+     ]
+    }
+   ],
+   "statut": "a_confirmer",
+   "source": "Livret alimentation fictif (démonstration)"
+  }
+ ],
  "remarques": [
   "Exemple fictif de remarque : deux documents donnent des informations différentes pour un même médicament."
  ],
@@ -610,7 +688,7 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
 
 // ---------- Constantes ----------
 const PREFIXE = 'mesSoins.v1.';
-const VERSION_APP = '1.11 — 06/10/2026';
+const VERSION_APP = '1.12 — 06/10/2026';
 const MESSAGE_AUCUNE_CONSIGNE = 'Aucune consigne confirmée dans les documents enregistrés. Contacte ton équipe soignante ou ton pharmacien.';
 const TYPES_RDV = {
   consultation: 'Consultation',
@@ -704,7 +782,7 @@ function dateValide(s) {
 }
 
 function validerDonnees(brut) {
-  const R = { meta: {}, fictif: false, rendezVous: [], medicaments: [], consignes: [], contacts: [], listeSymptomes: [], structure: [], avertissements: [], remarques: [] };
+  const R = { meta: {}, fictif: false, rendezVous: [], medicaments: [], consignes: [], contacts: [], alimentation: [], listeSymptomes: [], structure: [], avertissements: [], remarques: [] };
   if (!brut || typeof brut !== 'object' || Array.isArray(brut)) {
     R.structure.push('Le fichier doit contenir un objet JSON qui commence par « { ».');
     return R;
@@ -819,6 +897,32 @@ function validerDonnees(brut) {
     R.contacts.push(finir(c, ct, pb, {}));
   });
 
+  // Conseils alimentaires recopiés d'un livret : section facultative.
+  if (brut.conseils_alimentaires !== undefined && !Array.isArray(brut.conseils_alimentaires)) R.structure.push('Section « conseils_alimentaires » : une liste entre crochets [ … ] est attendue.');
+  (Array.isArray(brut.conseils_alimentaires) ? brut.conseils_alimentaires : []).forEach((g, i) => {
+    const c = commun(g, 'conseils_alimentaires', i); if (!c) return;
+    const pb = [];
+    if (texteManquant(g.situation)) pb.push('Situation (titre) manquante.');
+    if (texteManquant(g.source)) pb.push('Source manquante (obligatoire pour afficher un conseil).');
+    const parties = [];
+    if (!Array.isArray(g.parties) || g.parties.length === 0) pb.push('Liste « parties » vide ou absente.');
+    else g.parties.forEach((pt, j) => {
+      if (!pt || typeof pt !== 'object' || !Array.isArray(pt.conseils) || pt.conseils.length === 0) { pb.push(`Partie n° ${j + 1} : liste « conseils » vide ou absente.`); return; }
+      const conseils = pt.conseils.map((x, k) => {
+        if (typeof x === 'string') return texteManquant(x) ? { texte: x, ok: false, raison: 'Texte vide ou incomplet.' } : { texte: x, ok: true };
+        if (x && typeof x === 'object' && typeof x.texte === 'string') {
+          if (x.statut === 'confirme' && !texteManquant(x.texte)) return { texte: x.texte, ok: true };
+          return { texte: x.texte, ok: false, raison: x.note || (x.statut === 'a_confirmer' ? 'Marqué « à confirmer ».' : 'Statut absent ou inconnu.') };
+        }
+        return { texte: '', ok: false, raison: `Conseil n° ${k + 1} mal structuré.` };
+      });
+      parties.push({ titre: typeof pt.titre === 'string' ? pt.titre : '', conseils });
+    });
+    if (parties.length && !parties.some(pt => pt.conseils.some(x => x.ok))) pb.push('Aucun conseil confirmé.');
+    const textes = v => Array.isArray(v) ? v.filter(x => typeof x === 'string' && x.trim()) : [];
+    R.alimentation.push(finir(c, g, pb, { _parties: parties, _symptomes: textes(g.symptomes), _recettes: textes(g.recettes) }));
+  });
+
   if (brut.remarques !== undefined) {
     if (Array.isArray(brut.remarques)) R.remarques = brut.remarques.filter(x => typeof x === 'string' && x.trim());
     else R.structure.push('« remarques » doit être une liste de textes.');
@@ -837,7 +941,7 @@ let ERREUR_CHARGEMENT = '';
 let reglages = Object.assign({}, REGLAGES_DEFAUT, stock.lire('reglages', {}));
 const etat = {
   mois: null, jourSel: null, filtres: null,
-  datePrises: null, rdvEdition: null, erreurRdv: '', symptome: '', saisieSymptome: '', periodeHisto: '30', rapportImport: null
+  datePrises: null, rdvEdition: null, erreurRdv: '', symptome: '', saisieSymptome: '', alimOuvert: null, periodeHisto: '30', rapportImport: null
 };
 
 // ---------- Requêtes sur les données ----------
@@ -897,11 +1001,19 @@ const lireRealises = () => stock.lire('realises', {});
 
 function elementsAConfirmer() {
   const f = x => !x._confirme;
-  return { rdv: D.rendezVous.filter(f), meds: D.medicaments.filter(f), consignes: D.consignes.filter(f), contacts: D.contacts.filter(f) };
+  const alimPartiel = D.alimentation.filter(g => g._confirme).flatMap(g => g._parties.flatMap(pt => pt.conseils.filter(x => !x.ok).map(x => ({ groupe: g, partie: pt, conseil: x }))));
+  return { rdv: D.rendezVous.filter(f), meds: D.medicaments.filter(f), consignes: D.consignes.filter(f), contacts: D.contacts.filter(f), alim: D.alimentation.filter(f), alimPartiel };
 }
 function nbAConfirmer() {
   const e = elementsAConfirmer();
-  return e.rdv.length + e.meds.length + e.consignes.length + e.contacts.length + D.structure.length;
+  return e.rdv.length + e.meds.length + e.consignes.length + e.contacts.length + e.alim.length + e.alimPartiel.length + D.structure.length;
+}
+// Conseils alimentaires dont la liste « symptomes » (écrite dans les données) correspond à la recherche.
+function rechercherAlimentation(requete) {
+  const mots = t => normaliser(t).split(' ').map(m => m.replace(/s$/, '')).join(' ');
+  const q = mots(requete);
+  if (q.length < 3) return [];
+  return D.alimentation.filter(g => g._confirme && g._symptomes.some(s => { const t = mots(s); return t && (t === q || q.includes(t)); }));
 }
 
 function rechercherConsignes(requete) {
@@ -1187,7 +1299,7 @@ function vueSymptomes() {
           </dl>
         </article>`).join('') +
         '<p class="meta">Pour toute question, contacte ton équipe soignante ou ton pharmacien.</p>'
-      : `<div class="carte"><p class="message-aucune" id="message-aucune">${esc(MESSAGE_AUCUNE_CONSIGNE)}</p></div>`) + blocContacts();
+      : `<div class="carte"><p class="message-aucune" id="message-aucune">${esc(MESSAGE_AUCUNE_CONSIGNE)}</p></div>`) + blocLiensAlimentation(rechercherAlimentation(requete)) + blocContacts();
   }
   return `<h1>Recherche par symptôme</h1>
   <div class="encadre info"><p>Cette page affiche uniquement les consignes <strong>confirmées</strong> et recopiées depuis tes documents, avec leur source. Elle ne donne aucun avis médical et ne calcule aucune dose.</p></div>
@@ -1202,6 +1314,42 @@ function vueSymptomes() {
     <div class="ligne-actions"><button type="submit">Rechercher</button>${requete ? '<button type="button" class="secondaire" data-action="effacer-symptome">Effacer</button>' : ''}</div>
   </form>
   <div id="resultat-symptome">${resultat}</div>`;
+}
+
+const ICONE_ALIM = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 21V3c-2 1.5-3 4-3 7v4h3"></path></svg>';
+function blocLiensAlimentation(groupes) {
+  if (!groupes.length) return '';
+  return `<h2>Dans le livret alimentation</h2>
+  <ul class="liste-liens">${groupes.map(g => `<li><a href="#/alimentation" data-action="voir-alim" data-id="${esc(g._id)}"><span>${esc(g.situation)}<span class="desc">Conseils alimentaires recopiés du livret · Source : ${esc(g.source)}</span></span><span aria-hidden="true">›</span></a></li>`).join('')}</ul>`;
+}
+function carteAlimentation(g) {
+  const ouvert = etat.alimOuvert === g._id;
+  const nbMasques = g._parties.reduce((n, pt) => n + pt.conseils.filter(x => !x.ok).length, 0);
+  return `<details class="carte alim" id="alim-${esc(g._id)}" ${ouvert ? 'open' : ''}>
+    <summary><span class="icone-alim">${ICONE_ALIM}</span><span>${esc(g.situation)}${g.titre_livret ? `<span class="sous">« ${esc(g.titre_livret)} »</span>` : ''}</span><span class="chevron" aria-hidden="true">›</span></summary>
+    <div class="corps-alim">
+      ${g._parties.map(pt => {
+        const ok = pt.conseils.filter(x => x.ok);
+        if (!ok.length) return '';
+        return `${pt.titre ? `<h3>${esc(pt.titre)}</h3>` : ''}<ul class="conseils">${ok.map(x => `<li>${esc(x.texte)}</li>`).join('')}</ul>`;
+      }).join('')}
+      ${g._recettes.length ? `<div class="recettes"><strong>Recettes proposées dans le livret :</strong> ${esc(g._recettes.join(' · '))}</div>` : ''}
+      ${nbMasques ? `<p class="incomplet">${nbMasques} passage${nbMasques > 1 ? 's' : ''} illisible${nbMasques > 1 ? 's' : ''} sur la photo, non affiché${nbMasques > 1 ? 's' : ''}. <a href="#/a-confirmer">Voir « À confirmer »</a></p>` : ''}
+      <div class="source">Source : ${esc(g.source)}</div>
+    </div>
+  </details>`;
+}
+function vueAlimentation() {
+  const ok = D.alimentation.filter(g => g._confirme);
+  const exclus = D.alimentation.length - ok.length;
+  const quotidien = ok.filter(g => g.categorie === 'quotidien');
+  const enCasDe = ok.filter(g => g.categorie !== 'quotidien');
+  return `<h1>Alimentation</h1>
+  <div class="encadre info"><p>Conseils <strong>recopiés tels quels</strong> du livret alimentation enregistré, avec leur source. Ils sont généraux et ne remplacent pas l’avis de ton équipe soignante : en cas de doute, demande-lui.</p></div>
+  ${!ok.length ? '<div class="carte vide">Aucun conseil alimentaire confirmé dans les documents enregistrés.</div>' : ''}
+  ${enCasDe.length ? `<h2>En cas de…</h2>${enCasDe.map(carteAlimentation).join('')}` : ''}
+  ${quotidien.length ? `<h2>Au quotidien</h2>${quotidien.map(carteAlimentation).join('')}` : ''}
+  ${exclus ? `<div class="encadre alerte"><p>${exclus} fiche${exclus > 1 ? 's' : ''} n’${exclus > 1 ? 'apparaissent' : 'apparaît'} pas ici, car à confirmer. <a href="#/a-confirmer">Voir l’écran « À confirmer »</a></p></div>` : ''}`;
 }
 
 function vueHistorique() {
@@ -1338,6 +1486,18 @@ function vueAConfirmer() {
         ${c.posologie ? `<dt>Posologie</dt><dd>${esc(c.posologie)}</dd>` : ''}</dl>`)}
       ${c.source ? `<div class="source">Source : ${esc(c.source)}</div>` : ''}
     </article>`)}
+  ${sec('Fiches alimentation', e.alim, g => `<article class="carte">
+      <h3>${esc(g.situation || '(situation manquante)')}</h3>
+      <p class="meta">Cette fiche n’est pas affichée dans l’onglet Alimentation.</p>
+      ${listeRaisons(g)}
+      ${g.source ? `<div class="source">Source : ${esc(g.source)}</div>` : ''}
+    </article>`)}
+  ${sec('Passages illisibles du livret alimentation', e.alimPartiel, x => `<article class="carte">
+      <h3>${esc(x.groupe.situation)}${x.partie.titre ? ` — ${esc(x.partie.titre)}` : ''}</h3>
+      <p class="meta">Ce passage n’est pas affiché dans l’onglet Alimentation. ${esc(x.conseil.raison)}</p>
+      ${x.conseil.texte ? blocNonValide('Voir la lecture provisoire (non validée)', `<p>${esc(x.conseil.texte)}</p>`) : ''}
+      <div class="source">Source : ${esc(x.groupe.source)}</div>
+    </article>`)}
   ${sec('Contacts', e.contacts, c => `<article class="carte"><h3>${esc(c.nom || '(nom manquant)')}</h3>${listeRaisons(c)}${c.source ? `<div class="source">Source : ${esc(c.source)}</div>` : ''}</article>`)}
   ${D.remarques.length ? `<h2>Remarques sur les documents (${D.remarques.length})</h2><div class="carte"><p class="meta">Doublons, contradictions ou informations manquantes relevés dans les documents. À éclaircir avec l’équipe soignante.</p><ul class="raisons">${D.remarques.map(s => `<li>${esc(s)}</li>`).join('')}</ul></div>` : ''}
   ${D.avertissements.length ? `<h2>Remarques (non bloquantes)</h2><div class="carte"><ul class="raisons">${D.avertissements.map(s => `<li>${esc(s)}</li>`).join('')}</ul></div>` : ''}`;
@@ -1345,7 +1505,7 @@ function vueAConfirmer() {
 
 function resumeValidation(V) {
   const ligne = (nom, l) => `<li>${nom} : ${l.filter(x => x._confirme).length} confirmé(s), ${l.filter(x => !x._confirme).length} à confirmer</li>`;
-  return `<ul class="raisons">${ligne('Rendez-vous', V.rendezVous)}${ligne('Médicaments', V.medicaments)}${ligne('Consignes', V.consignes)}${ligne('Contacts', V.contacts)}
+  return `<ul class="raisons">${ligne('Rendez-vous', V.rendezVous)}${ligne('Médicaments', V.medicaments)}${ligne('Consignes', V.consignes)}${ligne('Contacts', V.contacts)}${V.alimentation.length ? ligne('Fiches alimentation', V.alimentation) : ''}
     ${V.structure.length ? `<li><strong>${V.structure.length} problème(s) de structure</strong></li>` : ''}</ul>`;
 }
 function vueDonnees() {
@@ -1452,7 +1612,7 @@ function vueAjouterRdv() {
 
 const VUES = {
   accueil: [vueAccueil, 'Accueil'], calendrier: [vueCalendrier, 'Calendrier'], prises: [vuePrises, 'Prises'],
-  symptomes: [vueSymptomes, 'Symptômes'], historique: [vueHistorique, 'Historique'], rappels: [vueRappels, 'Rappels'],
+  symptomes: [vueSymptomes, 'Symptômes'], alimentation: [vueAlimentation, 'Alimentation'], historique: [vueHistorique, 'Historique'], rappels: [vueRappels, 'Rappels'],
   'a-confirmer': [vueAConfirmer, 'À confirmer'], donnees: [vueDonnees, 'Données'], plus: [vuePlus, 'Plus'],
   'ajouter-rdv': [vueAjouterRdv, 'Rendez-vous']
 };
@@ -1474,6 +1634,7 @@ function rendre(nav) {
   document.querySelectorAll('[data-compte]').forEach(b => { b.hidden = !n; b.textContent = n; b.setAttribute('aria-label', `${n} à confirmer`); });
   afficherBandeaux();
   if (nav) { const h1 = main.querySelector('h1'); if (h1) { h1.tabIndex = -1; h1.focus({ preventScroll: true }); } window.scrollTo(0, 0); }
+  if (nav && route === 'alimentation' && etat.alimOuvert) { const c = document.getElementById('alim-' + etat.alimOuvert); if (c) { c.scrollIntoView({ block: 'start' }); c.querySelector('summary').focus({ preventScroll: true }); } etat.alimOuvert = null; }
   else if (cleFocus) { const el = main.querySelector(cleFocus); if (el) el.focus({ preventScroll: true }); }
 }
 function afficherBandeaux() {
@@ -1555,6 +1716,7 @@ document.addEventListener('click', ev => {
   else if (a === 'prises-aujourdhui') { etat.datePrises = dateVersIso(new Date()); rendre(false); }
   else if (a === 'marquer-realise') marquerRealise(b.dataset.id, true);
   else if (a === 'annuler-realise') marquerRealise(b.dataset.id, false);
+  else if (a === 'voir-alim') { etat.alimOuvert = b.dataset.id; }
   else if (a === 'effacer-symptome') { etat.symptome = ''; etat.saisieSymptome = ''; rendre(false); document.getElementById('sel-symptome').focus(); }
   else if (a === 'importer-code') {
     const zone = document.getElementById('code-import');
