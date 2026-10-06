@@ -1299,8 +1299,9 @@ function vueDonnees() {
   <h2>Importer mes données médicales</h2>
   <p>Choisis ton fichier <code>donnees_medicales.json</code>. Il est lu et conservé <strong>uniquement sur cet appareil</strong>.</p>
   ${SOURCE.type === 'fichier' ? '<p class="encadre alerte">Un fichier « donnees_medicales.json » est actuellement servi à côté de l’application : il est prioritaire sur un import manuel.</p>' : ''}
-  <label class="champ" for="fichier-donnees">Fichier JSON</label>
-  <input type="file" id="fichier-donnees" accept=".json,application/json">
+  <div class="ligne-actions"><label class="bouton" for="fichier-donnees">Choisir mon fichier de données…</label></div>
+  <input type="file" id="fichier-donnees" class="sr">
+  <p class="meta">Sur iPhone : choisis « Parcourir », puis l’emplacement où tu as enregistré <code>donnees_medicales.json</code> (par exemple « Sur mon iPhone » ou « Téléchargements »).</p>
   <div class="ligne-actions">
     <button class="secondaire" data-action="modele">Télécharger le modèle (données fictives)</button>
     ${SOURCE.type === 'import' ? '<button class="secondaire" data-action="revenir-demo">Revenir aux données de démonstration</button>' : ''}
@@ -1312,7 +1313,7 @@ function vueDonnees() {
     <button class="secondaire" data-action="sauvegarder">Télécharger une sauvegarde</button>
     <label class="bouton secondaire" for="fichier-sauvegarde">Restaurer une sauvegarde</label>
   </div>
-  <input type="file" id="fichier-sauvegarde" accept=".json,application/json" class="sr">
+  <input type="file" id="fichier-sauvegarde" class="sr">
 
   <h2>Confidentialité</h2>
   <ul class="raisons">
@@ -1465,8 +1466,8 @@ document.addEventListener('change', ev => {
   else if (t.name === 'theme') { reglages.theme = t.value; sauverReglages(); appliquerTheme(); annoncer('Apparence modifiée.'); }
   else if (t.id === 'delai-med') { reglages.medDelai = Number(t.value); sauverReglages(); }
   else if (t.id === 'horizon') { reglages.horizonJours = Number(t.value); sauverReglages(); }
-  else if (t.id === 'fichier-donnees' && t.files[0]) importerDonnees(t.files[0]);
-  else if (t.id === 'fichier-sauvegarde' && t.files[0]) restaurerSauvegarde(t.files[0]);
+  else if (t.id === 'fichier-donnees' && t.files[0]) { const f = t.files[0]; t.value = ''; annoncer('Lecture du fichier…'); importerDonnees(f); }
+  else if (t.id === 'fichier-sauvegarde' && t.files[0]) { const f = t.files[0]; t.value = ''; restaurerSauvegarde(f); }
 });
 
 document.addEventListener('submit', ev => {
