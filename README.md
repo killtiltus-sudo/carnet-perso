@@ -188,6 +188,13 @@ Le fichier `carnet.chiffre.json` contient les données **chiffrées** (AES-256-G
 
 Pour publier une nouvelle version : `MES_SOINS_CLE=… node outils/chiffrer.mjs chiffrer donnees_medicales.json carnet.chiffre.json`, puis enregistrer et pousser `carnet.chiffre.json`. Si un code fuite : générer une nouvelle clé (`node outils/chiffrer.mjs nouvelle-cle`), rechiffrer et distribuer les nouveaux codes ; les anciens deviennent inutiles.
 
+## 4 quater. Ajouter un rendez-vous depuis l'application
+**Calendrier → + Ajouter un rendez-vous** (type, titre, date, heure, durée, lieu, notes). On peut ensuite le modifier ou le supprimer depuis sa fiche.
+- Le rendez-vous est enregistré **uniquement sur ce téléphone** : il n'est ni publié ni visible par les proches.
+- Sans heure, il est classé « à confirmer ».
+- Il est inclus dans la sauvegarde (Plus → Données).
+- Indisponible en mode proche.
+
 ## 5. Vérification automatique (facultatif)
 Si Node.js est installé : `npm i -D playwright`, puis `node outils/verifier-parcours.mjs`.
 Le script vérifie notamment :

@@ -129,7 +129,7 @@ button.danger { background: var(--danger-fond); color: var(--danger); }
 button:disabled { opacity: .5; cursor: not-allowed; }
 button.petit, .bouton.petit { min-height: 38px; padding: 4px 14px; font-size: 15px; border-radius: 12px; }
 textarea { font: 13px/1.4 ui-monospace, Menlo, monospace; width: 100%; padding: 10px 12px; border: 1px solid var(--bord); border-radius: 14px; background: var(--surface); color: var(--texte); resize: vertical; }
-input[type="text"], input[type="search"], input[type="date"], select {
+input[type="text"], input[type="search"], input[type="date"], input[type="time"], select {
   font: inherit; font-size: 17px; min-height: 48px; padding: 10px 14px; border: 1px solid var(--bord); border-radius: 14px;
   background: var(--surface); color: var(--texte); width: 100%;
 }
@@ -607,7 +607,7 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
 
 // ---------- Constantes ----------
 const PREFIXE = 'mesSoins.v1.';
-const VERSION_APP = '1.8 — 06/10/2026';
+const VERSION_APP = '1.9 — 06/10/2026';
 const MESSAGE_AUCUNE_CONSIGNE = 'Aucune consigne confirmée dans les documents enregistrés. Contacte ton équipe soignante ou ton pharmacien.';
 const TYPES_RDV = {
   consultation: 'Consultation',
@@ -829,7 +829,7 @@ let ERREUR_CHARGEMENT = '';
 let reglages = Object.assign({}, REGLAGES_DEFAUT, stock.lire('reglages', {}));
 const etat = {
   mois: null, jourSel: null, filtres: null,
-  datePrises: null, symptome: '', saisieSymptome: '', periodeHisto: '30', rapportImport: null
+  datePrises: null, rdvEdition: null, erreurRdv: '', symptome: '', saisieSymptome: '', periodeHisto: '30', rapportImport: null
 };
 
 // ---------- Requêtes sur les données ----------
@@ -842,6 +842,16 @@ function rdvAVenir(maintenant, filtre) {
 // Rendez-vous non confirmés mais datés : visibles dans le calendrier avec la mention « À confirmer ».
 const rdvDatesNonConfirmes = () => D.rendezVous.filter(r => !r._confirme && r._dateOK);
 // Médicaments marqués « au_calendrier » (ex. injections faites à domicile) : affichés aussi dans le calendrier.
+function ajouterRdvPerso() {
+  if (D.lectureSeule) return;
+  const perso = stock.lire('rdvPerso', []);
+  if (!Array.isArray(perso) || !perso.length) return;
+  const V = validerDonnees({ meta: {}, rendez_vous: perso.map(r => Object.assign({}, r, {
+    statut: r.heure ? 'confirme' : 'a_confirmer',
+    source: `Ajouté par toi dans l’application le ${fmtHorodatage.format(new Date(r.creeLe || Date.now()))}`
+  })) });
+  V.rendezVous.forEach(r => { r._perso = true; D.rendezVous.push(r); });
+}
 function soinsDomicile() {
   const out = [];
   D.medicaments.filter(m => m._confirme && m.au_calendrier === true).forEach(m => {
@@ -948,7 +958,7 @@ function carteRdv(r, options = {}) {
     else if (passe) actions = `<div class="ligne-actions"><button class="secondaire petit" data-action="marquer-realise" data-id="${esc(r._id)}">Marquer comme réalisé</button></div>`;
   }
   return `<article class="carte rdv${r._confirme ? '' : ' non-confirme'}">
-    <div>${chipType(r._type)} ${badgeStatut(r)}</div>
+    <div>${chipType(r._type)} ${badgeStatut(r)}${r._perso ? ' <span class="badge" style="background:var(--surface-2);color:var(--texte-2)">Ajouté par toi</span>' : ''}</div>
     <h3>${esc(r.titre || '(sans titre)')}</h3>
     <div class="quand">${esc(quand)}</div>
     <div class="meta">${heureMq}
@@ -959,6 +969,7 @@ function carteRdv(r, options = {}) {
     ${r._confirme ? '' : '<p class="source">Information à vérifier. <a href="#/a-confirmer">Voir pourquoi</a></p>'}
     ${r.source ? `<div class="source">Source : ${esc(r.source)}</div>` : ''}
     ${actions}
+    ${r._perso && !D.lectureSeule && options.actions !== false ? `<div class="ligne-actions"><button class="secondaire petit" data-action="modifier-rdv" data-id="${esc(r.id)}">Modifier</button><button class="danger petit" data-action="supprimer-rdv" data-id="${esc(r.id)}">Supprimer</button></div>` : ''}
   </article>`;
 }
 function lignePrise(p, prises, aujourdhui, prefixe, opts = {}) {
@@ -1091,6 +1102,7 @@ function vueCalendrier() {
   const aVenir = visibles.filter(r => r.date >= auj).sort((a, b) => (a.date + (a.heure || '99')).localeCompare(b.date + (b.heure || '99'))).slice(0, 10);
 
   return `<h1>Calendrier</h1>
+  ${D.lectureSeule ? '' : '<div class="ligne-actions" style="margin:0 0 12px"><button data-action="ajouter-rdv">+ Ajouter un rendez-vous</button></div>'}
   <div class="filtres" role="group" aria-label="Types de rendez-vous affichés">
     ${typesPresents.map(t => `<label class="filtre" style="--tc:var(--t-${t})"><input type="checkbox" data-action="filtre" data-type="${t}" ${etat.filtres.has(t) ? 'checked' : ''}><span class="pastille" aria-hidden="true"></span>${esc(TYPES_RDV[t])}</label>`).join('')}
   </div>
@@ -1400,10 +1412,39 @@ function vuePlus() {
   </ul>`;
 }
 
+function vueAjouterRdv() {
+  if (D.lectureSeule) return '<h1>Rendez-vous</h1><div class="carte vide">L’ajout de rendez-vous n’est pas disponible en mode proche.</div>';
+  const perso = stock.lire('rdvPerso', []);
+  const r = (etat.rdvEdition && perso.find(x => x.id === etat.rdvEdition)) || { type: 'consultation', date: etat.jourSel || dateVersIso(new Date()), duree_minutes: 30 };
+  const types = Object.keys(TYPES_RDV).filter(k => k !== 'soin_domicile');
+  const durees = [15, 30, 60, 120, 240, 360, 480];
+  return `<h1>${etat.rdvEdition ? 'Modifier le rendez-vous' : 'Ajouter un rendez-vous'}</h1>
+  <form id="form-rdv" novalidate class="carte">
+    ${etat.erreurRdv ? `<div class="encadre danger" role="alert"><p>${esc(etat.erreurRdv)}</p></div>` : ''}
+    <label class="champ" for="rdv-type">Type</label>
+    <select id="rdv-type">${types.map(k => `<option value="${k}" ${r.type === k ? 'selected' : ''}>${esc(TYPES_RDV[k])}</option>`).join('')}</select>
+    <label class="champ" for="rdv-titre">Titre</label>
+    <input type="text" id="rdv-titre" value="${esc(r.titre || '')}" placeholder="Par exemple : Consultation avec le Dr …" autocomplete="off">
+    <label class="champ" for="rdv-date">Date</label>
+    <input type="date" id="rdv-date" value="${esc(r.date || '')}">
+    <label class="champ" for="rdv-heure">Heure <span class="meta">(laisse vide si tu ne la connais pas encore)</span></label>
+    <input type="time" id="rdv-heure" value="${esc(r.heure || '')}">
+    <label class="champ" for="rdv-duree">Durée</label>
+    <select id="rdv-duree">${durees.map(d => `<option value="${d}" ${Number(r.duree_minutes) === d ? 'selected' : ''}>${d < 60 ? d + ' min' : (d / 60) + ' h'}</option>`).join('')}</select>
+    <label class="champ" for="rdv-lieu">Lieu <span class="meta">(facultatif)</span></label>
+    <input type="text" id="rdv-lieu" value="${esc(r.lieu || '')}" autocomplete="off">
+    <label class="champ" for="rdv-notes">Notes <span class="meta">(facultatif)</span></label>
+    <textarea id="rdv-notes" rows="3" style="font:inherit;font-size:16px">${esc(r.notes || '')}</textarea>
+    <div class="ligne-actions"><button type="submit">Enregistrer</button><a class="bouton secondaire" href="#/calendrier">Annuler</a></div>
+  </form>
+  <div class="encadre info"><p>Ce rendez-vous est enregistré <strong>uniquement sur ce téléphone</strong>. Tes proches ne le verront pas : pour qu’il apparaisse chez eux, envoie-le-moi et je l’ajouterai à la prochaine mise à jour.</p></div>`;
+}
+
 const VUES = {
   accueil: [vueAccueil, 'Accueil'], calendrier: [vueCalendrier, 'Calendrier'], prises: [vuePrises, 'Prises'],
   symptomes: [vueSymptomes, 'Symptômes'], historique: [vueHistorique, 'Historique'], rappels: [vueRappels, 'Rappels'],
-  'a-confirmer': [vueAConfirmer, 'À confirmer'], donnees: [vueDonnees, 'Données'], plus: [vuePlus, 'Plus']
+  'a-confirmer': [vueAConfirmer, 'À confirmer'], donnees: [vueDonnees, 'Données'], plus: [vuePlus, 'Plus'],
+  'ajouter-rdv': [vueAjouterRdv, 'Rendez-vous']
 };
 function routeCourante() { const r = location.hash.replace(/^#\/?/, ''); return VUES[r] ? r : 'accueil'; }
 
@@ -1416,7 +1457,7 @@ function rendre(nav) {
   main.innerHTML = VUES[route][0]();
   document.title = `${VUES[route][1]} — Mes soins`;
   document.querySelectorAll('nav.principale a').forEach(a => {
-    const courant = a.dataset.route === route || (route !== 'plus' && a.dataset.route === 'plus' && ['historique', 'rappels', 'a-confirmer', 'donnees'].includes(route));
+    const courant = a.dataset.route === route || (route === 'ajouter-rdv' && a.dataset.route === 'calendrier') || (route !== 'plus' && a.dataset.route === 'plus' && ['historique', 'rappels', 'a-confirmer', 'donnees'].includes(route));
     if (courant) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   });
   const n = nbAConfirmer();
@@ -1462,6 +1503,22 @@ function marquerRealise(id, oui) {
   annoncer(oui ? 'Rendez-vous marqué comme réalisé.' : 'Marque « réalisé » annulée.');
   rendre(false);
 }
+function enregistrerRdvPerso() {
+  if (D.lectureSeule) return;
+  const v = id => document.getElementById(id).value.trim();
+  const r = { type: v('rdv-type'), titre: v('rdv-titre'), date: v('rdv-date'), heure: v('rdv-heure'), duree_minutes: Number(v('rdv-duree')), lieu: v('rdv-lieu'), notes: v('rdv-notes') };
+  const erreur = !r.titre ? 'Indique un titre.' : !dateValide(r.date) ? 'Indique une date valide.' : (r.heure && !heureValide(r.heure)) ? 'Heure invalide.' : '';
+  if (erreur) { etat.erreurRdv = erreur; rendre(false); const t = document.querySelector('#form-rdv [role="alert"]'); if (t) { t.tabIndex = -1; t.focus(); } return; }
+  ['heure', 'lieu', 'notes'].forEach(k => { if (!r[k]) delete r[k]; });
+  const perso = stock.lire('rdvPerso', []);
+  const i = etat.rdvEdition ? perso.findIndex(x => x.id === etat.rdvEdition) : -1;
+  if (i >= 0) perso[i] = Object.assign({ id: perso[i].id, creeLe: perso[i].creeLe, modifieLe: new Date().toISOString() }, r);
+  else perso.push(Object.assign({ id: `perso-${Date.now().toString(36)}`, creeLe: new Date().toISOString() }, r));
+  if (!stock.ecrire('rdvPerso', perso)) { etat.erreurRdv = 'Enregistrement impossible : stockage indisponible.'; rendre(false); return; }
+  const d = isoVersDate(r.date); etat.jourSel = r.date; etat.mois = new Date(d.getFullYear(), d.getMonth(), 1);
+  etat.rdvEdition = null; etat.erreurRdv = '';
+  chargerDonnees().then(() => { location.hash = '#/calendrier'; annoncer(r.heure ? 'Rendez-vous enregistré.' : 'Rendez-vous enregistré, heure à confirmer.'); });
+}
 function sauverReglages() { stock.ecrire('reglages', reglages); }
 function appliquerTheme() {
   const th = reglages.theme, r = document.documentElement;
@@ -1502,10 +1559,18 @@ document.addEventListener('click', ev => {
   else if (a === 'test-rappel') afficherRappel('test', 'Rappel de test', 'Voici à quoi ressemble un rappel à l’écran. Il ne s’affiche que si l’application est ouverte.');
   else if (a === 'modele') telecharger('donnees_medicales.exemple.json', JSON.stringify(JSON.parse(document.getElementById('donnees-demo').textContent), null, 2), 'application/json');
   else if (a === 'synchroniser') { synchroniser(true); }
+  else if (a === 'ajouter-rdv') { etat.rdvEdition = null; etat.erreurRdv = ''; location.hash = '#/ajouter-rdv'; }
+  else if (a === 'modifier-rdv') { etat.rdvEdition = b.dataset.id; etat.erreurRdv = ''; location.hash = '#/ajouter-rdv'; }
+  else if (a === 'supprimer-rdv') {
+    if (confirm('Supprimer ce rendez-vous de ton téléphone ?')) {
+      stock.ecrire('rdvPerso', stock.lire('rdvPerso', []).filter(x => x.id !== b.dataset.id));
+      chargerDonnees().then(() => { rendre(false); annoncer('Rendez-vous supprimé.'); });
+    }
+  }
   else if (a === 'desabonner') { if (confirm('Désactiver les mises à jour automatiques ? Les dernières données reçues restent sur cet appareil.')) { stock.supprimer('abonnement'); etat.rapportImport = null; chargerDonnees().then(() => rendre(false)); } }
   else if (a === 'revenir-demo') { if (confirm('Revenir aux données fictives de démonstration ? Ton fichier importé sera retiré de cet appareil (tes coches sont conservées).')) { stock.supprimer('donneesImportees'); stock.supprimer('abonnement'); etat.rapportImport = null; chargerDonnees().then(() => rendre(false)); } }
   else if (a === 'sauvegarder') {
-    const s = { type: 'sauvegarde-mes-soins', version: 1, creeLe: new Date().toISOString(), prises: lirePrises(), realises: lireRealises(), reglages };
+    const s = { type: 'sauvegarde-mes-soins', version: 1, creeLe: new Date().toISOString(), prises: lirePrises(), realises: lireRealises(), rdvPerso: stock.lire('rdvPerso', []), reglages };
     telecharger(`sauvegarde-mes-soins-${dateVersIso(new Date())}.json`, JSON.stringify(s, null, 2), 'application/json');
   }
   else if (a === 'tout-effacer') {
@@ -1543,6 +1608,7 @@ document.addEventListener('change', ev => {
 });
 
 document.addEventListener('submit', ev => {
+  if (ev.target.id === 'form-rdv') { ev.preventDefault(); enregistrerRdvPerso(); return; }
   if (ev.target.id !== 'form-symptome') return;
   ev.preventDefault();
   const txt = document.getElementById('txt-symptome').value.trim();
@@ -1684,7 +1750,7 @@ async function restaurerSauvegarde(fichier) {
     const s = JSON.parse(await lireFichier(fichier));
     if (!s || s.type !== 'sauvegarde-mes-soins') throw new Error('Ce fichier n’est pas une sauvegarde de « Mes soins ».');
     if (!confirm('Remplacer les coches, rendez-vous réalisés et réglages de cet appareil par ceux de la sauvegarde ?')) return;
-    stock.ecrire('prises', s.prises || {}); stock.ecrire('realises', s.realises || {});
+    stock.ecrire('prises', s.prises || {}); stock.ecrire('realises', s.realises || {}); if (Array.isArray(s.rdvPerso)) stock.ecrire('rdvPerso', s.rdvPerso);
     if (s.reglages) { reglages = Object.assign({}, REGLAGES_DEFAUT, s.reglages); sauverReglages(); }
     etat.rapportImport = { ok: true, html: '<p><strong>Sauvegarde restaurée.</strong></p>' };
   } catch (e) {
@@ -1850,6 +1916,7 @@ async function chargerDonnees() {
   if (SOURCE.type === 'demo') D.fictif = true;
   const abo = stock.lire('abonnement', null);
   if (abo && SOURCE.type === 'import') { SOURCE.abonnement = abo; if (abo.role === 'proche') D.lectureSeule = true; }
+  ajouterRdvPerso(); // après le choix du rôle : jamais en mode proche
 }
 
 let jourAffiche = dateVersIso(new Date());
