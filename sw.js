@@ -1,6 +1,7 @@
 // Service worker : garde l'application en mémoire sur l'appareil pour qu'elle fonctionne hors connexion.
-// Il ne met en cache que les fichiers de l'application ; aucune donnée de santé ne transite par lui.
-const CACHE = 'mes-soins-v7';
+// Il met en cache les fichiers de l'application et, pour l'hors connexion, les documents partagés
+// tels qu'ils sont publiés (chiffrés : ils ne sont déchiffrés que dans la page, avec la clé de l'abonnement).
+const CACHE = 'mes-soins-v8';
 const FICHIERS = ['./', 'index.html', 'manifest.webmanifest', 'icones/icone-192.png', 'icones/icone-512.png', 'icones/apple-touch-icon.png', 'polices/plus-jakarta-sans.woff2'];
 
 self.addEventListener('install', ev => {
@@ -33,7 +34,7 @@ self.addEventListener('fetch', ev => {
     })());
     return;
   }
-  // Autres fichiers (police, icônes) : copie locale, mise à jour en arrière-plan.
+  // Autres fichiers (police, icônes, documents chiffrés) : copie locale, mise à jour en arrière-plan.
   ev.respondWith(caches.open(CACHE).then(async cache => {
     const enCache = await cache.match(ev.request, { ignoreSearch: true });
     const reseau = fetch(ev.request).then(rep => { if (rep.ok) cache.put(ev.request, rep.clone()); return rep; }).catch(() => enCache);

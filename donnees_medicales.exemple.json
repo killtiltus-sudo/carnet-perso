@@ -281,7 +281,27 @@
         }
       ],
       "recettes": [
-        "Recette fictive A"
+        {
+          "id": "rec-demo-a",
+          "titre": "Recette fictive A",
+          "page": 1,
+          "infos": [
+            "Pour 2 personnes (fictif)"
+          ],
+          "ingredients": [
+            "Ingrédient fictif 1",
+            {
+              "sous_titre": "Pour la sauce (fictif) :"
+            },
+            "Ingrédient fictif 2"
+          ],
+          "preparation": [
+            "Étape fictive 1.",
+            "Étape fictive 2."
+          ],
+          "astuce": "Astuce fictive."
+        },
+        "Recette fictive B"
       ],
       "statut": "confirme",
       "source": "Livret alimentation fictif (démonstration)"

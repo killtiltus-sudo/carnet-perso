@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- Confidentialité : aucune ressource externe, aucune connexion sortante (seule la lecture du fichier local donnees_medicales.json est permise). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; frame-src blob:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex, nofollow">
 <meta name="color-scheme" content="light dark">
@@ -83,7 +83,11 @@ a { color: var(--primaire); }
 #bandeau-demo { background: var(--demo-fond); color: var(--demo); padding: 8px 16px; font-weight: 700; text-align: center; font-size: 14px; padding-top: calc(8px + env(safe-area-inset-top)); }
 #bandeau-proche { background: var(--primaire-doux); color: var(--primaire-fort); padding: 8px 16px; font-weight: 700; text-align: center; font-size: 14px; padding-top: calc(8px + env(safe-area-inset-top)); }
 #bandeau-erreur { background: var(--danger-fond); color: var(--danger); padding: 8px 16px; font-weight: 600; font-size: 15px; }
-header.app { padding: calc(14px + env(safe-area-inset-top)) 20px 0; max-width: 760px; margin: 0 auto; }
+header.app { padding: calc(10px + env(safe-area-inset-top)) 12px 0 20px; max-width: 760px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+header.app .bouton-menu { position: relative; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 12px; border-radius: 999px; background: var(--surface); box-shadow: var(--ombre); color: var(--texte); font-weight: 700; font-size: 14px; text-decoration: none; }
+header.app .bouton-menu svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+header.app .bouton-menu[aria-current="page"] { background: var(--primaire-doux); color: var(--primaire-fort); }
+header.app .bouton-menu .badge.compte { position: absolute; top: -4px; right: -4px; }
 header.app .nom-app { font-weight: 800; font-size: 13px; color: var(--texte-2); text-transform: uppercase; letter-spacing: .08em; }
 
 main { max-width: 760px; margin: 0 auto; padding: 0 20px 28px; overflow-wrap: break-word; }
@@ -133,7 +137,7 @@ input[type="text"], input[type="search"], input[type="date"], input[type="time"]
   font: inherit; font-size: 17px; min-height: 48px; padding: 10px 14px; border: 1px solid var(--bord); border-radius: 14px;
   background: var(--surface); color: var(--texte); width: 100%;
 }
-label.champ { display: block; font-weight: 700; margin: 14px 0 6px; }
+label.champ, p.champ { display: block; font-weight: 700; margin: 14px 0 6px; }
 fieldset { border: 0; border-radius: var(--rayon); padding: 14px 16px 16px; margin: 0 0 14px; background: var(--surface); box-shadow: var(--ombre); }
 legend { font-weight: 800; padding: 0; float: left; width: 100%; margin-bottom: 6px; }
 legend + * { clear: both; }
@@ -247,6 +251,49 @@ dl.details dd { margin: 2px 0 0; overflow-wrap: anywhere; }
 .alim .recettes { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); font-size: 15px; }
 .alim .incomplet { margin-top: 10px; font-size: 14px; color: var(--alerte); }
 
+/* Recettes */
+.alim .recettes h3 { margin-top: 0; }
+.alim ul.liste-recettes { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+details.recette { background: var(--surface); border-radius: 12px; }
+details.recette > summary { cursor: pointer; list-style: none; padding: 10px 12px; font-weight: 800; display: flex; align-items: center; gap: 8px; min-height: 44px; }
+details.recette > summary::-webkit-details-marker { display: none; }
+details.recette > summary .sous { display: block; font-weight: 500; font-size: 13px; color: var(--texte-2); }
+details.recette > summary .chevron { margin-left: auto; color: var(--texte-2); }
+details.recette[open] > summary .chevron { transform: rotate(90deg); }
+details.recette .corps-recette { padding: 0 12px 12px; font-size: 15px; }
+details.recette h4 { margin: 12px 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--texte-2); }
+details.recette ul, details.recette ol { margin: 0; padding-left: 20px; }
+details.recette li { margin-bottom: 4px; }
+details.recette li.sous-titre { list-style: none; margin-left: -20px; font-weight: 800; margin-top: 8px; }
+details.recette .astuce { margin-top: 10px; padding: 8px 10px; border-radius: 10px; background: var(--primaire-doux); }
+.recette-nom { padding: 8px 12px; border-radius: 12px; background: var(--surface); }
+
+/* Documents */
+.choix-cat { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px; }
+.choix-cat button { min-height: 38px; padding: 6px 12px; border-radius: 999px; background: var(--surface); color: var(--texte); box-shadow: var(--ombre); font-size: 14px; font-weight: 700; }
+.choix-cat button[aria-pressed="true"] { background: var(--primaire); color: var(--primaire-texte); }
+.liste-docs { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.liste-docs a { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface); border-radius: 18px; text-decoration: none; color: var(--texte); box-shadow: var(--ombre); min-height: 64px; }
+.liste-docs .icone-doc { flex: none; width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: var(--primaire-doux); color: var(--primaire-fort); }
+.liste-docs .titre-doc { display: block; font-weight: 800; }
+.liste-docs .sous { display: block; font-size: 14px; color: var(--texte-2); }
+.badge-origine { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--surface-2); color: var(--texte-2); }
+.apercu-fichier { margin: 0 0 14px; }
+.apercu-fichier img { display: block; max-width: 100%; height: auto; border-radius: 12px; background: var(--surface-2); }
+.apercu-fichier iframe { display: block; width: 100%; height: 70vh; border: 0; border-radius: 12px; background: #fff; }
+.apercu-fichier .nom-fichier { font-size: 14px; color: var(--texte-2); margin: 6px 0; overflow-wrap: anywhere; }
+.grille-cat { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; background: var(--surface-2); border-radius: 14px; padding: 4px; }
+.grille-cat label { display: flex; align-items: center; justify-content: center; text-align: center; min-height: 48px; border-radius: 11px; font-weight: 700; font-size: 15px; cursor: pointer; padding: 4px; }
+.grille-cat input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.grille-cat label:has(input:checked) { background: var(--surface); color: var(--primaire-fort); box-shadow: var(--ombre); }
+.grille-cat label:has(input:focus-visible) { outline: 3px solid var(--focus); }
+.bouton-fichier { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; border-radius: 14px; background: var(--primaire-doux); color: var(--primaire-fort); font-weight: 800; cursor: pointer; margin-bottom: 8px; }
+.bouton-fichier input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.bouton-fichier:has(input:focus-visible) { outline: 3px solid var(--focus); }
+.fichiers-choisis { list-style: none; padding: 0; margin: 4px 0 8px; display: flex; flex-direction: column; gap: 6px; }
+.fichiers-choisis li { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 12px; background: var(--surface-2); font-size: 14px; overflow-wrap: anywhere; }
+.fichiers-choisis li span { flex: 1; }
+
 /* À confirmer */
 .non-valide { background: var(--alerte-fond); border-radius: 12px; padding: 10px 12px; margin-top: 10px; font-size: 15px; }
 .non-valide summary { cursor: pointer; font-weight: 800; color: var(--alerte); min-height: 32px; }
@@ -304,7 +351,7 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
 <div id="bandeau-demo" role="note" hidden>DONNÉES FICTIVES DE DÉMONSTRATION — ce ne sont pas tes rendez-vous ni tes traitements.</div>
 <div id="bandeau-erreur" role="alert" hidden></div>
 <div id="bandeau-stockage" class="encadre alerte" role="alert" hidden style="margin:0;border-radius:0">Le stockage local est indisponible dans ce navigateur (navigation privée ?). Tes coches et réglages ne seront pas conservés.</div>
-<header class="app"><span class="nom-app">Mes soins</span></header>
+<header class="app"><span class="nom-app">Mes soins</span><a class="bouton-menu" href="#/plus" data-route="plus" aria-label="Plus : historique, rappels, à confirmer, données, apparence"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>Plus <span class="badge compte" data-compte hidden></span></a></header>
 
 <nav class="principale" aria-label="Navigation principale">
   <ul>
@@ -313,11 +360,11 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
     <li><a href="#/prises" data-route="prises"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="18" height="7" rx="3.5"/><path d="M12 9v7"/></svg>Prises</a></li>
     <li><a href="#/symptomes" data-route="symptomes"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/></svg>Symptômes</a></li>
     <li><a href="#/alimentation" data-route="alimentation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 21V3c-2 1.5-3 4-3 7v4h3"/></svg>Alimentation</a></li>
+    <li><a href="#/documents" data-route="documents"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>Documents</a></li>
     <li class="secondaire"><a href="#/historique" data-route="historique"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 3"/></svg>Historique</a></li>
     <li class="secondaire"><a href="#/rappels" data-route="rappels"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"/></svg>Rappels</a></li>
     <li class="secondaire"><a href="#/a-confirmer" data-route="a-confirmer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg>À confirmer <span class="badge compte" data-compte hidden></span></a></li>
     <li class="secondaire"><a href="#/donnees" data-route="donnees"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Données</a></li>
-    <li class="plus"><a href="#/plus" data-route="plus"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>Plus <span class="badge compte" data-compte hidden></span></a></li>
   </ul>
 </nav>
 
@@ -608,7 +655,27 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
     }
    ],
    "recettes": [
-    "Recette fictive A"
+    {
+     "id": "rec-demo-a",
+     "titre": "Recette fictive A",
+     "page": 1,
+     "infos": [
+      "Pour 2 personnes (fictif)"
+     ],
+     "ingredients": [
+      "Ingrédient fictif 1",
+      {
+       "sous_titre": "Pour la sauce (fictif) :"
+      },
+      "Ingrédient fictif 2"
+     ],
+     "preparation": [
+      "Étape fictive 1.",
+      "Étape fictive 2."
+     ],
+     "astuce": "Astuce fictive."
+    },
+    "Recette fictive B"
    ],
    "statut": "confirme",
    "source": "Livret alimentation fictif (démonstration)"
@@ -688,7 +755,8 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
 
 // ---------- Constantes ----------
 const PREFIXE = 'mesSoins.v1.';
-const VERSION_APP = '1.12 — 06/10/2026';
+const CATEGORIES_DOC = { prise_de_sang: 'Prise de sang', compte_rendu: 'Compte rendu', imagerie: 'Imagerie', ordonnance: 'Ordonnance' };
+const VERSION_APP = '1.13 — 06/10/2026';
 const MESSAGE_AUCUNE_CONSIGNE = 'Aucune consigne confirmée dans les documents enregistrés. Contacte ton équipe soignante ou ton pharmacien.';
 const TYPES_RDV = {
   consultation: 'Consultation',
@@ -781,8 +849,21 @@ function dateValide(s) {
   return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
 }
 
+// Recettes d'une fiche alimentation : un nom seul (texte) ou une recette recopiée en entier.
+function validerRecettes(v, idFiche, R) {
+  if (v === undefined) return [];
+  if (!Array.isArray(v)) { R.avertissements.push(`Fiche « ${idFiche} » : « recettes » doit être une liste ; ignorée.`); return []; }
+  const lignes = l => Array.isArray(l) ? l.filter(x => (typeof x === 'string' && x.trim()) || (x && typeof x.sous_titre === 'string')) : [];
+  return v.flatMap(r => {
+    if (typeof r === 'string') return r.trim() ? [r.trim()] : [];
+    if (r && typeof r === 'object' && !texteManquant(r.titre)) return [Object.assign({}, r, { infos: lignes(r.infos), ingredients: lignes(r.ingredients), preparation: lignes(r.preparation) })];
+    R.avertissements.push(`Fiche « ${idFiche} » : une recette sans titre a été ignorée.`);
+    return [];
+  });
+}
+
 function validerDonnees(brut) {
-  const R = { meta: {}, fictif: false, rendezVous: [], medicaments: [], consignes: [], contacts: [], alimentation: [], listeSymptomes: [], structure: [], avertissements: [], remarques: [] };
+  const R = { meta: {}, fictif: false, rendezVous: [], medicaments: [], consignes: [], contacts: [], alimentation: [], documents: [], listeSymptomes: [], structure: [], avertissements: [], remarques: [] };
   if (!brut || typeof brut !== 'object' || Array.isArray(brut)) {
     R.structure.push('Le fichier doit contenir un objet JSON qui commence par « { ».');
     return R;
@@ -905,8 +986,9 @@ function validerDonnees(brut) {
     if (texteManquant(g.situation)) pb.push('Situation (titre) manquante.');
     if (texteManquant(g.source)) pb.push('Source manquante (obligatoire pour afficher un conseil).');
     const parties = [];
-    if (!Array.isArray(g.parties) || g.parties.length === 0) pb.push('Liste « parties » vide ou absente.');
-    else g.parties.forEach((pt, j) => {
+    const recettes = validerRecettes(g.recettes, c.id, R);
+    if ((!Array.isArray(g.parties) || g.parties.length === 0) && !recettes.length) pb.push('Liste « parties » vide ou absente.');
+    else (Array.isArray(g.parties) ? g.parties : []).forEach((pt, j) => {
       if (!pt || typeof pt !== 'object' || !Array.isArray(pt.conseils) || pt.conseils.length === 0) { pb.push(`Partie n° ${j + 1} : liste « conseils » vide ou absente.`); return; }
       const conseils = pt.conseils.map((x, k) => {
         if (typeof x === 'string') return texteManquant(x) ? { texte: x, ok: false, raison: 'Texte vide ou incomplet.' } : { texte: x, ok: true };
@@ -920,7 +1002,23 @@ function validerDonnees(brut) {
     });
     if (parties.length && !parties.some(pt => pt.conseils.some(x => x.ok))) pb.push('Aucun conseil confirmé.');
     const textes = v => Array.isArray(v) ? v.filter(x => typeof x === 'string' && x.trim()) : [];
-    R.alimentation.push(finir(c, g, pb, { _parties: parties, _symptomes: textes(g.symptomes), _recettes: textes(g.recettes) }));
+    R.alimentation.push(finir(c, g, pb, { _parties: parties, _symptomes: textes(g.symptomes), _recettes: recettes }));
+  });
+
+  // Documents partagés (fichiers chiffrés publiés à côté de l'application).
+  if (brut.documents !== undefined && !Array.isArray(brut.documents)) R.structure.push('Section « documents » : une liste entre crochets [ … ] est attendue.');
+  (Array.isArray(brut.documents) ? brut.documents : []).forEach((x, i) => {
+    const pb = [];
+    if (!x || typeof x !== 'object') { R.avertissements.push(`Document n° ${i + 1} ignoré : format invalide.`); return; }
+    if (typeof x.id !== 'string' || !x.id.trim() || ids.has('doc:' + x.id)) pb.push('identifiant absent ou en double');
+    if (texteManquant(x.titre)) pb.push('titre manquant');
+    if (!Object.prototype.hasOwnProperty.call(CATEGORIES_DOC, x.categorie)) pb.push('catégorie inconnue');
+    if (!dateValide(x.date)) pb.push('date invalide');
+    const fichiers = Array.isArray(x.fichiers) ? x.fichiers.filter(f => f && typeof f.chemin === 'string' && /^documents\/[A-Za-z0-9_-]+\.bin$/.test(f.chemin) && typeof f.type === 'string') : [];
+    if (!fichiers.length || fichiers.length !== (Array.isArray(x.fichiers) ? x.fichiers.length : -1)) pb.push('fichier(s) manquant(s) ou invalide(s)');
+    if (pb.length) { R.avertissements.push(`Document « ${String(x.titre || x.id || i + 1)} » ignoré : ${pb.join(', ')}.`); return; }
+    ids.add('doc:' + x.id);
+    R.documents.push(Object.assign({}, x, { _id: x.id, _partage: true, fichiers: fichiers.map(f => ({ chemin: f.chemin, type: f.type, nom: typeof f.nom === 'string' && f.nom ? f.nom : f.chemin.split('/').pop(), taille: Number(f.taille) || 0 })) }));
   });
 
   if (brut.remarques !== undefined) {
@@ -941,7 +1039,7 @@ let ERREUR_CHARGEMENT = '';
 let reglages = Object.assign({}, REGLAGES_DEFAUT, stock.lire('reglages', {}));
 const etat = {
   mois: null, jourSel: null, filtres: null,
-  datePrises: null, rdvEdition: null, erreurRdv: '', symptome: '', saisieSymptome: '', alimOuvert: null, periodeHisto: '30', rapportImport: null
+  datePrises: null, rdvEdition: null, erreurRdv: '', symptome: '', saisieSymptome: '', alimOuvert: null, docsLocaux: [], erreurDocs: '', filtreDocs: '', docId: null, docEdition: null, fichiersChoisis: [], periodeHisto: '30', rapportImport: null
 };
 
 // ---------- Requêtes sur les données ----------
@@ -1322,6 +1420,25 @@ function blocLiensAlimentation(groupes) {
   return `<h2>Dans le livret alimentation</h2>
   <ul class="liste-liens">${groupes.map(g => `<li><a href="#/alimentation" data-action="voir-alim" data-id="${esc(g._id)}"><span>${esc(g.situation)}<span class="desc">Conseils alimentaires recopiés du livret · Source : ${esc(g.source)}</span></span><span aria-hidden="true">›</span></a></li>`).join('')}</ul>`;
 }
+function lignesRecette(l, balise) {
+  return `<${balise}>${l.map(x => typeof x === 'string' ? `<li>${esc(x)}</li>` : `<li class="sous-titre">${esc(x.sous_titre)}</li>`).join('')}</${balise}>`;
+}
+function blocRecettes(g) {
+  const completes = g._recettes.filter(r => typeof r === 'object');
+  const noms = g._recettes.filter(r => typeof r === 'string');
+  return `<div class="recettes">
+    ${completes.length ? `<h3>${g.categorie === 'recettes' ? 'Recettes' : 'Recettes proposées dans le livret'}</h3><ul class="liste-recettes">${completes.map(r => `<li><details class="recette" id="recette-${esc(r.id || '')}">
+      <summary><span>${esc(r.titre)}${r.infos.length ? `<span class="sous">${esc(r.infos.join(' · '))}</span>` : ''}</span><span class="chevron" aria-hidden="true">›</span></summary>
+      <div class="corps-recette">
+        ${r.intro ? `<p>${esc(r.intro)}</p>` : ''}
+        ${r.ingredients.length ? `<h4>Ingrédients</h4>${lignesRecette(r.ingredients, 'ul')}` : ''}
+        ${r.preparation.length ? `<h4>Préparation</h4>${lignesRecette(r.preparation, 'ul')}` : ''}
+        ${r.astuce ? `<p class="astuce">💡 ${esc(r.astuce)}</p>` : ''}
+        ${r.page ? `<div class="source">Livret, page ${esc(String(r.page))}</div>` : ''}
+      </div></details></li>`).join('')}</ul>` : ''}
+    ${noms.length ? `<p style="margin:10px 0 0"><strong>${completes.length ? 'Autres recettes citées' : 'Recettes proposées dans le livret'} (nom seulement) :</strong> ${esc(noms.join(' · '))}</p>` : ''}
+  </div>`;
+}
 function carteAlimentation(g) {
   const ouvert = etat.alimOuvert === g._id;
   const nbMasques = g._parties.reduce((n, pt) => n + pt.conseils.filter(x => !x.ok).length, 0);
@@ -1333,7 +1450,7 @@ function carteAlimentation(g) {
         if (!ok.length) return '';
         return `${pt.titre ? `<h3>${esc(pt.titre)}</h3>` : ''}<ul class="conseils">${ok.map(x => `<li>${esc(x.texte)}</li>`).join('')}</ul>`;
       }).join('')}
-      ${g._recettes.length ? `<div class="recettes"><strong>Recettes proposées dans le livret :</strong> ${esc(g._recettes.join(' · '))}</div>` : ''}
+      ${g._recettes.length ? blocRecettes(g) : ''}
       ${nbMasques ? `<p class="incomplet">${nbMasques} passage${nbMasques > 1 ? 's' : ''} illisible${nbMasques > 1 ? 's' : ''} sur la photo, non affiché${nbMasques > 1 ? 's' : ''}. <a href="#/a-confirmer">Voir « À confirmer »</a></p>` : ''}
       <div class="source">Source : ${esc(g.source)}</div>
     </div>
@@ -1343,13 +1460,226 @@ function vueAlimentation() {
   const ok = D.alimentation.filter(g => g._confirme);
   const exclus = D.alimentation.length - ok.length;
   const quotidien = ok.filter(g => g.categorie === 'quotidien');
-  const enCasDe = ok.filter(g => g.categorie !== 'quotidien');
+  const recettesSeules = ok.filter(g => g.categorie === 'recettes');
+  const enCasDe = ok.filter(g => g.categorie !== 'quotidien' && g.categorie !== 'recettes');
   return `<h1>Alimentation</h1>
   <div class="encadre info"><p>Conseils <strong>recopiés tels quels</strong> du livret alimentation enregistré, avec leur source. Ils sont généraux et ne remplacent pas l’avis de ton équipe soignante : en cas de doute, demande-lui.</p></div>
   ${!ok.length ? '<div class="carte vide">Aucun conseil alimentaire confirmé dans les documents enregistrés.</div>' : ''}
   ${enCasDe.length ? `<h2>En cas de…</h2>${enCasDe.map(carteAlimentation).join('')}` : ''}
   ${quotidien.length ? `<h2>Au quotidien</h2>${quotidien.map(carteAlimentation).join('')}` : ''}
+  ${recettesSeules.length ? `<h2>Recettes du livret</h2>${recettesSeules.map(carteAlimentation).join('')}` : ''}
   ${exclus ? `<div class="encadre alerte"><p>${exclus} fiche${exclus > 1 ? 's' : ''} n’${exclus > 1 ? 'apparaissent' : 'apparaît'} pas ici, car à confirmer. <a href="#/a-confirmer">Voir l’écran « À confirmer »</a></p></div>` : ''}`;
+}
+
+// ---------- Documents : prises de sang, comptes rendus, imagerie, ordonnances ----------
+// Documents « partagés » : publiés chiffrés, visibles aussi par les proches.
+// Documents « sur ce téléphone » : ajoutés dans l'application, stockés uniquement sur l'appareil (IndexedDB).
+const ICONE_DOC = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5M9 13h6M9 17h6"></path></svg>';
+const ICONE_IMAGE = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"></rect><circle cx="9" cy="10" r="2"></circle><path d="M21 16l-5-5-9 9"></path></svg>';
+function tailleLisible(n) { return n >= 1048576 ? `${(n / 1048576).toFixed(1).replace('.', ',')} Mo` : `${Math.max(1, Math.round(n / 1024))} Ko`; }
+function tousDocuments() {
+  const locaux = D.lectureSeule ? [] : etat.docsLocaux.map(x => Object.assign({}, x, { _id: 'local:' + x.id, _partage: false }));
+  return D.documents.concat(locaux).sort((a, b) => b.date.localeCompare(a.date) || a.titre.localeCompare(b.titre, 'fr'));
+}
+function vueDocuments() {
+  const tous = tousDocuments();
+  const filtre = etat.filtreDocs;
+  const visibles = filtre ? tous.filter(x => x.categorie === filtre) : tous;
+  const cats = Object.keys(CATEGORIES_DOC);
+  return `<h1>Documents</h1>
+  ${D.lectureSeule ? '' : `<div class="ligne-actions" style="margin-top:0"><a class="bouton" href="#/ajouter-document">＋ Ajouter un document</a></div>`}
+  <div class="choix-cat" role="group" aria-label="Filtrer par catégorie">
+    <button type="button" data-action="filtre-docs" data-cat="" aria-pressed="${!filtre}">Tous (${tous.length})</button>
+    ${cats.map(k => `<button type="button" data-action="filtre-docs" data-cat="${k}" aria-pressed="${filtre === k}">${esc(CATEGORIES_DOC[k])} (${tous.filter(x => x.categorie === k).length})</button>`).join('')}
+  </div>
+  ${etat.erreurDocs ? `<div class="encadre danger" role="alert"><p>${esc(etat.erreurDocs)}</p></div>` : ''}
+  ${visibles.length ? `<ul class="liste-docs">${visibles.map(x => {
+      const image = x.fichiers.every(f => f.type.startsWith('image/'));
+      return `<li><a href="#/document" data-action="voir-doc" data-id="${esc(x._id)}"><span class="icone-doc">${image ? ICONE_IMAGE : ICONE_DOC}</span>
+        <span><span class="titre-doc">${esc(x.titre)}</span><span class="sous">${esc(CATEGORIES_DOC[x.categorie])} · ${esc(jourCourt(x.date))}${x.fichiers.length > 1 ? ` · ${x.fichiers.length} fichiers` : ''}</span>
+        <span class="badge-origine">${x._partage ? 'Partagé avec tes proches' : 'Sur ce téléphone'}</span></span></a></li>`;
+    }).join('')}</ul>` : `<div class="carte vide">${tous.length ? 'Aucun document dans cette catégorie.' : 'Aucun document pour l’instant.'}</div>`}
+  ${D.lectureSeule ? '' : `<div class="encadre info" style="margin-top:16px"><p>Les documents que tu ajoutes ici restent <strong>uniquement sur ce téléphone</strong>. Pour que tes proches les voient, envoie-les-moi : je les ajouterai chiffrés à la prochaine mise à jour.</p><p>L’application ne lit pas et n’interprète pas tes résultats : elle les range et les affiche.</p></div>
+  <h2>Sauvegarde</h2>
+  <p class="meta">Si tu supprimes l’application ou changes de téléphone, les documents rangés sur ce téléphone sont perdus. Garde une sauvegarde dans Fichiers ou iCloud Drive.</p>
+  <div class="ligne-actions"><button type="button" class="secondaire" data-action="sauver-docs" ${etat.docsLocaux.length ? '' : 'disabled'}>Tout sauvegarder (${etat.docsLocaux.length})</button>
+    <label class="bouton secondaire" style="position:relative">Restaurer une sauvegarde<input type="file" id="fichier-sauvegarde-docs" style="position:absolute;opacity:0;width:1px;height:1px"></label></div>`}`;
+}
+function documentCourant() { return tousDocuments().find(x => x._id === etat.docId) || null; }
+function vueDocument() {
+  const x = documentCourant();
+  if (!x) return '<h1>Document</h1><div class="carte vide">Document introuvable.</div><p><a href="#/documents">Retour aux documents</a></p>';
+  return `<p style="margin:0 0 4px"><a href="#/documents">‹ Documents</a></p>
+  <h1>${esc(x.titre)}</h1>
+  <p class="meta" style="margin-top:-6px">${esc(CATEGORIES_DOC[x.categorie])} · ${esc(jourLong(x.date))} · <span class="badge-origine">${x._partage ? 'Partagé avec tes proches' : 'Sur ce téléphone'}</span></p>
+  ${x.note ? `<p>${esc(x.note)}</p>` : ''}
+  <div id="apercu-doc" aria-live="polite"><p class="meta">Ouverture du document…</p></div>
+  ${x.source ? `<div class="source">Source : ${esc(x.source)}</div>` : ''}
+  ${!x._partage && !D.lectureSeule ? `<div class="ligne-actions"><button type="button" class="secondaire petit" data-action="modifier-doc" data-id="${esc(x.id)}">Modifier</button><button type="button" class="danger petit" data-action="supprimer-doc" data-id="${esc(x.id)}">Supprimer</button></div>` : ''}`;
+}
+let urlsOuvertes = [];
+let fichiersOuverts = [];
+function libererApercus() { urlsOuvertes.forEach(u => URL.revokeObjectURL(u)); urlsOuvertes = []; fichiersOuverts = []; }
+async function octetsFichier(x, f) {
+  if (!x._partage) return f.donnees;
+  const ab = stock.lire('abonnement', null);
+  if (!ab || !ab.cle) throw new Error('Ce document partagé ne peut être ouvert qu’avec les mises à jour automatiques activées (code « MS2: »).');
+  if (!window.crypto || !crypto.subtle) throw new Error('Ouverture impossible ici (adresse https nécessaire).');
+  const rep = await fetch(f.chemin);
+  if (!rep.ok) throw new Error(`Fichier introuvable (erreur ${rep.status}). Vérifie ta connexion.`);
+  return dechiffrerOctets(await rep.json(), ab.cle);
+}
+async function afficherApercuDocument() {
+  libererApercus();
+  const zone = document.getElementById('apercu-doc');
+  let x = documentCourant();
+  if (!zone || !x) return;
+  try {
+    if (!x._partage) x = Object.assign({}, x, await docsLocaux.lire(x.id));
+    const blocs = [];
+    for (let i = 0; i < x.fichiers.length; i++) {
+      const f = x.fichiers[i];
+      const blob = new Blob([await octetsFichier(x, f)], { type: f.type || 'application/octet-stream' });
+      const url = URL.createObjectURL(blob); urlsOuvertes.push(url);
+      fichiersOuverts[i] = { blob, nom: f.nom, type: f.type };
+      const apercu = f.type.startsWith('image/') ? `<img src="${url}" alt="${esc(f.nom)}">`
+        : f.type === 'application/pdf' ? `<iframe src="${url}" title="${esc(f.nom)}"></iframe>`
+        : `<div class="carte vide">Aperçu non disponible pour ce format. Utilise « Ouvrir ou enregistrer ».</div>`;
+      blocs.push(`<div class="apercu-fichier">${apercu}<p class="nom-fichier">${esc(f.nom)} · ${esc(tailleLisible(blob.size))}</p>
+        <div class="ligne-actions" style="margin-top:0"><button type="button" class="secondaire petit" data-action="partager-fichier" data-index="${i}">Ouvrir ou enregistrer</button></div></div>`);
+    }
+    if (document.getElementById('apercu-doc') === zone) zone.innerHTML = blocs.join('');
+  } catch (e) {
+    zone.innerHTML = `<div class="encadre danger" role="alert"><p>${esc(e.message || 'Ouverture impossible.')}</p></div>`;
+  }
+}
+async function partagerFichier(i) {
+  const f = fichiersOuverts[i]; if (!f) return;
+  const fichier = new File([f.blob], f.nom, { type: f.type });
+  if (navigator.canShare && navigator.share && navigator.canShare({ files: [fichier] })) {
+    try { await navigator.share({ files: [fichier], title: f.nom }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  telecharger(f.nom, f.blob, f.type);
+}
+function vueAjouterDocument() {
+  if (D.lectureSeule) return '<h1>Documents</h1><div class="carte vide">L’ajout de documents n’est pas disponible en mode proche.</div>';
+  const ed = etat.docEdition ? etat.docsLocaux.find(x => x.id === etat.docEdition) : null;
+  const v = ed || { categorie: '', titre: '', date: dateVersIso(new Date()), note: '' };
+  return `<h1>${ed ? 'Modifier le document' : 'Ajouter un document'}</h1>
+  <form id="form-doc" novalidate class="carte">
+    <div id="erreur-doc"></div>
+    ${ed ? `<p class="meta">${ed.fichiers.length} fichier${ed.fichiers.length > 1 ? 's' : ''} : ${esc(ed.fichiers.map(f => f.nom).join(', '))}</p>` : `
+    <p class="champ" style="margin-top:0">Fichiers <span class="meta">(PDF, photos, images, Word… plusieurs à la fois si besoin)</span></p>
+    <label class="bouton-fichier"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"></path></svg>Choisir des fichiers ou des photos<input type="file" id="doc-fichiers" multiple></label>
+    <label class="bouton-fichier"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>Prendre une photo<input type="file" id="doc-photo" accept="image/*" capture="environment"></label>
+    <ul class="fichiers-choisis" id="fichiers-choisis">${listeFichiersChoisis()}</ul>`}
+    <p class="champ">Catégorie</p>
+    <div class="grille-cat" role="radiogroup" aria-label="Catégorie">${Object.keys(CATEGORIES_DOC).map(k => `<label><input type="radio" name="doc-cat" value="${k}" ${v.categorie === k ? 'checked' : ''}>${esc(CATEGORIES_DOC[k])}</label>`).join('')}</div>
+    <label class="champ" for="doc-titre">Titre</label>
+    <input type="text" id="doc-titre" value="${esc(v.titre)}" placeholder="Par exemple : Bilan sanguin avant cure 2" autocomplete="off">
+    <label class="champ" for="doc-date">Date du document</label>
+    <input type="date" id="doc-date" value="${esc(v.date)}">
+    <label class="champ" for="doc-note">Note <span class="meta">(facultatif)</span></label>
+    <textarea id="doc-note" rows="2" style="font:inherit;font-size:16px">${esc(v.note || '')}</textarea>
+    <div class="ligne-actions"><button type="submit">Enregistrer</button><a class="bouton secondaire" href="${ed ? '#/document' : '#/documents'}">Annuler</a></div>
+  </form>
+  <div class="encadre info"><p>Le document est enregistré <strong>uniquement sur ce téléphone</strong>.</p></div>`;
+}
+function listeFichiersChoisis() {
+  return etat.fichiersChoisis.map((f, i) => `<li><span>${esc(f.name || 'photo')} · ${esc(tailleLisible(f.size))}</span><button type="button" class="secondaire petit" data-action="retirer-fichier" data-index="${i}" aria-label="Retirer ${esc(f.name || 'photo')}">Retirer</button></li>`).join('');
+}
+function majFichiersChoisis() { const ul = document.getElementById('fichiers-choisis'); if (ul) ul.innerHTML = listeFichiersChoisis(); }
+function typeFichier(f) {
+  if (f.type) return f.type;
+  const ext = (f.name || '').toLowerCase().split('.').pop();
+  return { pdf: 'application/pdf', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', heic: 'image/heic', heif: 'image/heif', webp: 'image/webp', gif: 'image/gif', doc: 'application/msword', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', txt: 'text/plain' }[ext] || 'application/octet-stream';
+}
+async function enregistrerDocument() {
+  const err = m => { const z = document.getElementById('erreur-doc'); if (z) { z.innerHTML = `<div class="encadre danger" role="alert"><p>${esc(m)}</p></div>`; z.scrollIntoView({ block: 'center' }); } };
+  const cat = (document.querySelector('input[name="doc-cat"]:checked') || {}).value;
+  const titre = document.getElementById('doc-titre').value.trim();
+  const date = document.getElementById('doc-date').value;
+  const note = document.getElementById('doc-note').value.trim();
+  const ed = etat.docEdition ? etat.docsLocaux.find(x => x.id === etat.docEdition) : null;
+  if (!ed && !etat.fichiersChoisis.length) return err('Choisis au moins un fichier ou une photo.');
+  if (!cat) return err('Choisis une catégorie.');
+  if (!titre) return err('Donne un titre au document.');
+  if (!dateValide(date)) return err('Indique la date du document.');
+  try {
+    if (ed) {
+      const complet = await docsLocaux.lire(ed.id);
+      await docsLocaux.ecrire(Object.assign(complet, { categorie: cat, titre, date, note, modifieLe: new Date().toISOString() }));
+    } else {
+      const fichiers = [];
+      for (const f of etat.fichiersChoisis) fichiers.push({ nom: f.name || `photo-${date}.jpg`, type: typeFichier(f), taille: f.size, donnees: await f.arrayBuffer() });
+      const id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+      await docsLocaux.ecrire({ id, categorie: cat, titre, date, note, fichiers, ajouteLe: new Date().toISOString() });
+      if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+      etat.docId = 'local:' + id;
+    }
+  } catch (e) {
+    return err(e && e.name === 'QuotaExceededError' ? 'Plus assez de place sur ce téléphone pour enregistrer ce document.' : `Enregistrement impossible : ${e.message || e}`);
+  }
+  etat.fichiersChoisis = []; const modif = !!ed; etat.docEdition = null;
+  await chargerDocsLocaux();
+  location.hash = modif ? '#/document' : '#/documents';
+  annoncer(modif ? 'Document modifié.' : 'Document enregistré sur ce téléphone.');
+}
+// Stockage local des documents (IndexedDB : jamais transmis).
+function ouvrirBaseDocs() {
+  return new Promise((ok, ko) => {
+    if (!window.indexedDB) return ko(new Error('Le rangement de documents n’est pas disponible dans ce navigateur.'));
+    const r = indexedDB.open('mesSoinsDocuments', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('documents', { keyPath: 'id' });
+    r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error);
+  });
+}
+async function opDocs(mode, fn) {
+  const db = await ouvrirBaseDocs();
+  return new Promise((ok, ko) => {
+    const tx = db.transaction('documents', mode); const req = fn(tx.objectStore('documents'));
+    tx.oncomplete = () => { db.close(); ok(req ? req.result : undefined); };
+    tx.onerror = tx.onabort = () => { db.close(); ko(tx.error); };
+  });
+}
+const docsLocaux = {
+  tous: () => opDocs('readonly', st => st.getAll()),
+  lire: id => opDocs('readonly', st => st.get(id)),
+  ecrire: d => opDocs('readwrite', st => st.put(d)),
+  supprimer: id => opDocs('readwrite', st => st.delete(id)),
+  vider: () => opDocs('readwrite', st => st.clear())
+};
+async function chargerDocsLocaux() {
+  try {
+    const l = await docsLocaux.tous();
+    etat.docsLocaux = l.filter(x => x && Object.prototype.hasOwnProperty.call(CATEGORIES_DOC, x.categorie) && dateValide(x.date) && Array.isArray(x.fichiers))
+      .map(x => ({ id: x.id, categorie: x.categorie, titre: x.titre, date: x.date, note: x.note || '', fichiers: x.fichiers.map(f => ({ nom: f.nom, type: f.type, taille: f.taille })) }));
+    etat.erreurDocs = '';
+  } catch (e) { etat.docsLocaux = []; etat.erreurDocs = e.message || 'Documents de ce téléphone illisibles.'; }
+}
+function octetsVersBase64(buf) {
+  const o = new Uint8Array(buf); let s = '';
+  for (let i = 0; i < o.length; i += 0x8000) s += String.fromCharCode.apply(null, o.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+async function sauvegarderDocuments() {
+  const l = await docsLocaux.tous();
+  const contenu = { type: 'sauvegarde-mes-soins-documents', version: 1, creeLe: new Date().toISOString(),
+    documents: l.map(x => Object.assign({}, x, { fichiers: x.fichiers.map(f => ({ nom: f.nom, type: f.type, taille: f.taille, base64: octetsVersBase64(f.donnees) })) })) };
+  telecharger(`sauvegarde-documents-${dateVersIso(new Date())}.json`, JSON.stringify(contenu), 'application/json');
+}
+async function restaurerDocuments(fichier) {
+  try {
+    const s = JSON.parse(await lireFichier(fichier));
+    if (!s || s.type !== 'sauvegarde-mes-soins-documents' || !Array.isArray(s.documents)) throw new Error('Ce fichier n’est pas une sauvegarde de documents de « Mes soins ».');
+    let n = 0;
+    for (const x of s.documents) {
+      if (!x || !x.id || !Array.isArray(x.fichiers)) continue;
+      await docsLocaux.ecrire(Object.assign({}, x, { fichiers: x.fichiers.map(f => ({ nom: f.nom, type: f.type, taille: f.taille, donnees: b64Octets(f.base64).buffer })) }));
+      n++;
+    }
+    await chargerDocsLocaux(); rendre(false); annoncer(`${n} document${n > 1 ? 's' : ''} restauré${n > 1 ? 's' : ''}.`);
+  } catch (e) { etat.erreurDocs = `Restauration impossible : ${e.message}`; rendre(false); }
 }
 
 function vueHistorique() {
@@ -1614,7 +1944,8 @@ const VUES = {
   accueil: [vueAccueil, 'Accueil'], calendrier: [vueCalendrier, 'Calendrier'], prises: [vuePrises, 'Prises'],
   symptomes: [vueSymptomes, 'Symptômes'], alimentation: [vueAlimentation, 'Alimentation'], historique: [vueHistorique, 'Historique'], rappels: [vueRappels, 'Rappels'],
   'a-confirmer': [vueAConfirmer, 'À confirmer'], donnees: [vueDonnees, 'Données'], plus: [vuePlus, 'Plus'],
-  'ajouter-rdv': [vueAjouterRdv, 'Rendez-vous']
+  'ajouter-rdv': [vueAjouterRdv, 'Rendez-vous'], documents: [vueDocuments, 'Documents'], document: [vueDocument, 'Document'],
+  'ajouter-document': [vueAjouterDocument, 'Ajouter un document']
 };
 function routeCourante() { const r = location.hash.replace(/^#\/?/, ''); return VUES[r] ? r : 'accueil'; }
 
@@ -1624,10 +1955,12 @@ function rendre(nav) {
   const actif = document.activeElement;
   const cleFocus = actif && (actif.dataset.cle ? `[data-cle="${CSS.escape(actif.dataset.cle)}"]` : actif.id ? `#${CSS.escape(actif.id)}` : null);
   const main = document.getElementById('contenu');
+  if (route !== 'document') libererApercus();
   main.innerHTML = VUES[route][0]();
+  if (route === 'document') afficherApercuDocument();
   document.title = `${VUES[route][1]} — Mes soins`;
-  document.querySelectorAll('nav.principale a').forEach(a => {
-    const courant = a.dataset.route === route || (route === 'ajouter-rdv' && a.dataset.route === 'calendrier') || (route !== 'plus' && a.dataset.route === 'plus' && ['historique', 'rappels', 'a-confirmer', 'donnees'].includes(route));
+  document.querySelectorAll('nav.principale a, header.app a[data-route]').forEach(a => {
+    const courant = a.dataset.route === route || (route === 'ajouter-rdv' && a.dataset.route === 'calendrier') || (['document', 'ajouter-document'].includes(route) && a.dataset.route === 'documents') || (a.dataset.route === 'plus' && ['historique', 'rappels', 'a-confirmer', 'donnees'].includes(route) && !a.closest('nav'));
     if (courant) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   });
   const n = nbAConfirmer();
@@ -1717,6 +2050,15 @@ document.addEventListener('click', ev => {
   else if (a === 'marquer-realise') marquerRealise(b.dataset.id, true);
   else if (a === 'annuler-realise') marquerRealise(b.dataset.id, false);
   else if (a === 'voir-alim') { etat.alimOuvert = b.dataset.id; }
+  else if (a === 'filtre-docs') { etat.filtreDocs = b.dataset.cat; rendre(false); }
+  else if (a === 'voir-doc') { etat.docId = b.dataset.id; }
+  else if (a === 'partager-fichier') partagerFichier(Number(b.dataset.index));
+  else if (a === 'retirer-fichier') { etat.fichiersChoisis.splice(Number(b.dataset.index), 1); majFichiersChoisis(); }
+  else if (a === 'modifier-doc') { etat.docEdition = b.dataset.id; location.hash = '#/ajouter-document'; }
+  else if (a === 'supprimer-doc') {
+    if (confirm('Supprimer ce document de ce téléphone ? Cette action est définitive.')) docsLocaux.supprimer(b.dataset.id).then(chargerDocsLocaux).then(() => { location.hash = '#/documents'; annoncer('Document supprimé.'); });
+  }
+  else if (a === 'sauver-docs') sauvegarderDocuments().catch(e => { etat.erreurDocs = `Sauvegarde impossible : ${e.message}`; rendre(false); });
   else if (a === 'effacer-symptome') { etat.symptome = ''; etat.saisieSymptome = ''; rendre(false); document.getElementById('sel-symptome').focus(); }
   else if (a === 'importer-code') {
     const zone = document.getElementById('code-import');
@@ -1747,8 +2089,9 @@ document.addEventListener('click', ev => {
     telecharger(`sauvegarde-mes-soins-${dateVersIso(new Date())}.json`, JSON.stringify(s, null, 2), 'application/json');
   }
   else if (a === 'tout-effacer') {
-    if (confirm('Effacer toutes les données de cet appareil (données importées, coches, rendez-vous réalisés, réglages) ? Cette action est définitive.')) {
+    if (confirm('Effacer toutes les données de cet appareil (données importées, coches, rendez-vous réalisés, réglages, documents ajoutés) ? Cette action est définitive.')) {
       stock.toutEffacer(); reglages = Object.assign({}, REGLAGES_DEFAUT); etat.rapportImport = null; appliquerTheme();
+      docsLocaux.vider().catch(() => {}); etat.docsLocaux = [];
       chargerDonnees().then(() => { rendre(false); annoncer('Toutes les données de cet appareil ont été effacées.'); });
     }
   }
@@ -1778,10 +2121,13 @@ document.addEventListener('change', ev => {
   else if (t.id === 'horizon') { reglages.horizonJours = Number(t.value); sauverReglages(); }
   else if (t.id === 'fichier-donnees' && t.files[0]) { const f = t.files[0]; t.value = ''; annoncer('Lecture du fichier…'); importerDonnees(f); }
   else if (t.id === 'fichier-sauvegarde' && t.files[0]) { const f = t.files[0]; t.value = ''; restaurerSauvegarde(f); }
+  else if ((t.id === 'doc-fichiers' || t.id === 'doc-photo') && t.files.length) { etat.fichiersChoisis.push(...t.files); t.value = ''; majFichiersChoisis(); }
+  else if (t.id === 'fichier-sauvegarde-docs' && t.files[0]) { const f = t.files[0]; t.value = ''; restaurerDocuments(f); }
 });
 
 document.addEventListener('submit', ev => {
   if (ev.target.id === 'form-rdv') { ev.preventDefault(); enregistrerRdvPerso(); return; }
+  if (ev.target.id === 'form-doc') { ev.preventDefault(); enregistrerDocument(); return; }
   if (ev.target.id !== 'form-symptome') return;
   ev.preventDefault();
   const txt = document.getElementById('txt-symptome').value.trim();
@@ -1878,6 +2224,12 @@ async function dechiffrerEnveloppe(env, cle) {
   const contenu = JSON.parse(new TextDecoder().decode(clair));
   if (!contenu || typeof contenu.maj !== 'string' || !contenu.donnees) throw new Error('Contenu de la mise à jour invalide.');
   return contenu;
+}
+async function dechiffrerOctets(env, cle) {
+  if (!env || env.format !== 'mes-soins-document' || env.v !== 1) throw new Error('Document chiffré non reconnu.');
+  const k = await cleDechiffrement(cle, env.sel, env.iterations);
+  try { return await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64Octets(env.iv) }, k, b64Octets(env.donnees)); }
+  catch (e) { throw new Error('Ce document ne peut pas être déchiffré avec ton code : demande un nouveau code d’abonnement.'); }
 }
 function decoderCodeAbonnement(texte) {
   const code = extraireCode(texte);
@@ -2120,7 +2472,7 @@ function tic() {
   verifierRappels();
 }
 
-window.addEventListener('hashchange', () => rendre(true));
+window.addEventListener('hashchange', () => { if (routeCourante() !== 'ajouter-document') { etat.fichiersChoisis = []; if (routeCourante() !== 'document') etat.docEdition = null; } rendre(true); });
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
   tic();
@@ -2131,7 +2483,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || estServeu
   navigator.serviceWorker.register('sw.js').catch(() => { /* fonctionnement en ligne uniquement */ });
 }
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-chargerDonnees().then(() => {
+Promise.all([chargerDonnees(), chargerDocsLocaux()]).then(() => {
   rendre(false);
   synchroniser(false);
   tic();

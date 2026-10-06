@@ -37,7 +37,7 @@ Après la première ouverture, l'application fonctionne **hors connexion**. Elle
 - Pour être prévenu à l'heure, utilise l'export vers le **Calendrier** (§ 3). L'application ne peut pas te prévenir lorsqu'elle est fermée.
 
 ### Apparence
-Menu **Plus → Apparence** : **Automatique** (suit le mode clair ou sombre du téléphone), **Clair** ou **Sombre**.
+Bouton **Plus** (en haut à droite) → **Apparence** : **Automatique** (suit le mode clair ou sombre du téléphone), **Clair** ou **Sombre**.
 
 ### Sur ordinateur
 - **En ligne** : ouvre l'adresse de l'application dans ton navigateur.
@@ -61,7 +61,7 @@ Dans le dossier, lance `python3 -m http.server 8000`, puis ouvre `http://localho
 3. Remplace les exemples par les informations **recopiées depuis tes documents** : ordonnances, plannings, fiches de l'équipe soignante.
 4. Mets `"donnees_fictives": false` dans la section `meta`.
 5. Enregistre le fichier sur l'iPhone, dans l'app **Fichiers** (par exemple « Sur mon iPhone »).
-6. Dans l'application installée : menu **Plus → Données → Importer mes données médicales** → choisis le fichier.
+6. Dans l'application installée : bouton **Plus** (en haut à droite) → **Données → Importer mes données médicales** → choisis le fichier.
 7. Ouvre l'écran **À confirmer** pour vérifier ce qui a été refusé et pourquoi.
 
 > 🔒 Ne mets jamais `donnees_medicales.json` sur un site web, un dépôt GitHub public ou un service de partage public.
@@ -125,7 +125,7 @@ Les médicaments « si besoin », sans horaire fixe, se notent plutôt dans `con
 | `parties` | oui | Liste de `{ "titre": "…" (facultatif), "conseils": [ … ] }` |
 | `conseils` | au moins un confirmé | Textes **recopiés** du livret. Un passage illisible s'écrit `{ "texte": "…", "statut": "a_confirmer", "note": "…" }` : il est masqué et listé dans « À confirmer » |
 | `symptomes` | non | Mots de la recherche par symptôme qui affichent un lien vers cette fiche (correspondance exacte, au pluriel près) |
-| `recettes` | non | Noms des recettes proposées dans le livret |
+| `recettes` | non | Liste de recettes : un nom seul (texte), ou une recette recopiée en entier `{ "id", "titre", "page", "intro", "infos": [ … ], "ingredients": [ … ], "preparation": [ … ], "astuce" }` (dans `ingredients` et `preparation`, `{ "sous_titre": "…" }` crée un intertitre). Elle s'ouvre au toucher. Une fiche `"categorie": "recettes"` peut ne contenir que des recettes |
 | `titre_livret` | non | Titre tel qu'écrit dans le livret |
 | `source` | **oui** | Sans source, la fiche n'est jamais affichée |
 
@@ -206,8 +206,24 @@ Pour publier une nouvelle version : `MES_SOINS_CLE=… node outils/chiffrer.mjs 
 **Calendrier → + Ajouter un rendez-vous** (type, titre, date, heure, durée, lieu, notes). On peut ensuite le modifier ou le supprimer depuis sa fiche.
 - Le rendez-vous est enregistré **uniquement sur ce téléphone** : il n'est ni publié ni visible par les proches.
 - Sans heure, il est classé « à confirmer ».
-- Il est inclus dans la sauvegarde (Plus → Données).
+- Il est inclus dans la sauvegarde (bouton « Plus » en haut à droite → Données).
 - Indisponible en mode proche.
+
+## 4 quinquies. Documents (prises de sang, comptes rendus, imagerie, ordonnances)
+Onglet **Documents**. Deux sortes de documents :
+- **Ajoutés sur ce téléphone** (bouton « Ajouter un document ») : un ou plusieurs fichiers de n'importe quel format (PDF, photos, images, Word…), ou une photo prise sur le moment, avec une catégorie, un titre, une date et une note. Ils sont rangés **uniquement sur l'appareil** (IndexedDB), jamais transmis. Bouton **« Tout sauvegarder »** : un seul fichier à garder dans Fichiers ou iCloud Drive, à réimporter avec « Restaurer une sauvegarde ».
+- **Partagés** (visibles aussi par les proches) : publiés **chiffrés** dans `documents/`, avec la même clé que le carnet, et listés dans la section `documents` des données :
+
+```json
+"documents": [
+  { "id": "doc-2026-10-12-bilan", "titre": "Bilan sanguin J12", "categorie": "prise_de_sang", "date": "2026-10-12",
+    "fichiers": [ { "chemin": "documents/Xy3….bin", "nom": "bilan.pdf", "type": "application/pdf", "taille": 123456 } ] }
+]
+```
+Catégories : `prise_de_sang`, `compte_rendu`, `imagerie`, `ordonnance`. Pour chiffrer un fichier :
+`MES_SOINS_CLE=… node outils/chiffrer.mjs document bilan.pdf documents/` (affiche l'entrée `fichiers` à recopier ; le nom publié est aléatoire).
+
+L'application **n'interprète pas** les résultats : elle range et affiche les documents. Les images et PDF s'affichent dans l'application ; pour les autres formats, « Ouvrir ou enregistrer » passe par le menu de partage du téléphone.
 
 ## 5. Vérification automatique (facultatif)
 Si Node.js est installé : `npm i -D playwright`, puis `node outils/verifier-parcours.mjs`.
