@@ -170,6 +170,9 @@ Conseils :
 - Seuls les éléments **confirmés et complets** sont exportés.
 
 ### Rappels dans l'application : limités
+- **Alerte de prise** : à l'heure d'une prise non cochée, un écran plein s'affiche avec les médicaments de cette heure (nom, boîte, dose prescrite), un son est joué et répété toutes les 30 s pendant 5 min au plus. Boutons « Pris », « Tout est pris », « Rappeler dans 10 min », « Fermer ». Réglages et bouton de test dans **Rappels**.
+- Sur iPhone, le son n'est possible qu'après un premier toucher de l'écran depuis l'ouverture de l'application, et le mode silencieux peut le couper.
+- Bouton **« Créer l'événement de test »** : un événement .ics dans 3 minutes avec alerte, pour vérifier que les alertes du Calendrier sonnent téléphone verrouillé.
 - Ils s'affichent **uniquement lorsque l'application est ouverte à l'écran**. Ce ne sont **pas des alarmes garanties** : rien ne s'affiche si l'application, le navigateur ou l'appareil est fermé ou en veille.
 - Sur ordinateur, tu peux aussi autoriser les notifications du navigateur, avec les mêmes limites.
 - **Sur iPhone, même installée sur l'écran d'accueil, l'application ne peut pas te prévenir lorsqu'elle est fermée.** Utilise l'export vers le Calendrier.

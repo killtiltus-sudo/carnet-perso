@@ -338,6 +338,25 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
 .rappel { pointer-events: auto; max-width: 720px; margin: 0 auto; width: 100%; background: var(--surface); border-radius: var(--rayon); padding: 14px 16px; box-shadow: 0 0 0 2px var(--primaire), 0 10px 30px rgba(0,0,0,.25); }
 .rappel strong { display: block; }
 #annonce { position: absolute; left: -9999px; }
+/* Alerte de prise (plein écran) */
+#alerte-prise { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); background: rgba(10, 25, 50, .62); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+#alerte-prise[hidden] { display: none; }
+.alerte-carte { width: 100%; max-width: 460px; max-height: 100%; overflow-y: auto; background: var(--surface); border-radius: 24px; padding: 22px 18px 18px; box-shadow: 0 0 0 4px var(--primaire), 0 20px 50px rgba(0,0,0,.35); text-align: center; }
+.alerte-icone { width: 56px; height: 56px; margin: 0 auto 8px; border-radius: 50%; display: grid; place-items: center; background: var(--primaire); color: var(--primaire-texte); }
+.alerte-icone svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.alerte-carte h2 { margin: 0 0 4px; font-size: 22px; }
+.alerte-carte .alerte-heure { margin: 0 0 10px; font-size: 18px; font-weight: 800; color: var(--primaire-fort); }
+.alerte-carte ul { list-style: none; margin: 0 0 14px; padding: 0; text-align: left; display: flex; flex-direction: column; gap: 8px; }
+.alerte-carte li { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 14px; background: var(--surface-2); }
+.alerte-carte li > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.alerte-carte li .meta { display: block; font-size: 14px; }
+.alerte-carte li.fait { opacity: .55; }
+.alerte-carte .ligne-actions { justify-content: center; }
+.alerte-carte .ligne-actions button { flex: 1 1 auto; }
+@media (prefers-reduced-motion: no-preference) {
+  .alerte-icone { animation: pulsation 1.4s ease-in-out infinite; }
+  @keyframes pulsation { 0%, 100% { box-shadow: 0 0 0 0 rgba(31,95,191,.55); transform: scale(1); } 50% { box-shadow: 0 0 0 18px rgba(31,95,191,0); transform: scale(1.06); } }
+}
 
 @media (prefers-reduced-motion: no-preference) {
   .rappel { animation: entree .25s ease-out; }
@@ -371,6 +390,7 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
 
 <main id="contenu" tabindex="-1"></main>
 <div id="zone-rappels" aria-live="assertive"></div>
+<div id="alerte-prise" role="alertdialog" aria-modal="true" aria-labelledby="alerte-titre" hidden></div>
 <div id="annonce" aria-live="polite"></div>
 
 <script type="application/json" id="donnees-demo">{
@@ -757,7 +777,7 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
 // ---------- Constantes ----------
 const PREFIXE = 'mesSoins.v1.';
 const CATEGORIES_DOC = { prise_de_sang: 'Prise de sang', compte_rendu: 'Compte rendu', imagerie: 'Imagerie', ordonnance: 'Ordonnance' };
-const VERSION_APP = '1.16 — 06/10/2026';
+const VERSION_APP = '1.17 — 07/10/2026';
 const MESSAGE_AUCUNE_CONSIGNE = 'Aucune consigne confirmée dans les documents enregistrés. Contacte ton équipe soignante ou ton pharmacien.';
 const TYPES_RDV = {
   consultation: 'Consultation',
@@ -784,7 +804,7 @@ const REGLAGES_DEFAUT = {
   rdvActif: true, rdvDelais: [1440, 60],
   medActif: true, medDelai: 0,
   horizonJours: 30, masquerDetails: false,
-  rappelsAppli: true, notifNavigateur: false,
+  rappelsAppli: true, notifNavigateur: false, sonRappel: true, repeterRappel: true,
   theme: 'auto'
 };
 
@@ -1754,7 +1774,7 @@ function vueRappels() {
   <div class="encadre alerte">
     <h2 style="margin-top:0">Limites des rappels dans l’application</h2>
     <p>Les rappels affichés par cette application ne fonctionnent que <strong>lorsqu’elle est ouverte</strong> à l’écran. Ce ne sont <strong>pas des alarmes garanties</strong> : rien ne s’affiche si l’application, le navigateur ou le téléphone est fermé ou en veille.</p>
-    <p>Sur iPhone, même installée sur l’écran d’accueil, cette application ne peut pas te prévenir lorsqu’elle est fermée. Pour être prévenu, utilise l’export vers le Calendrier.</p>
+    <p>Sur iPhone, même installée sur l’écran d’accueil, cette application ne peut pas te prévenir lorsqu’elle est fermée. Pour être prévenu, utilise l’export vers le Calendrier : ses alertes sonnent et s’affichent même téléphone verrouillé (selon les sons réglés dans Réglages → Sons et vibrations → Alertes du calendrier).</p>
   </div>
 
   <fieldset>
@@ -1795,7 +1815,20 @@ function vueRappels() {
     <p class="meta">Notifications du navigateur : ${notifSupportee ? (permission === 'granted' ? 'autorisées' : permission === 'denied' ? 'refusées dans les réglages du navigateur' : 'pas encore autorisées') : 'non disponibles ici'}.
     ${notifSupportee && permission === 'default' ? '<button class="secondaire petit" data-action="permission-notif">Autoriser</button>' : ''}</p>
     <div class="ligne-actions"><button class="secondaire petit" data-action="test-rappel">Tester un rappel à l’écran</button></div>
-  </fieldset>`;
+  </fieldset>
+  <fieldset>
+    <legend>Alerte de prise de médicaments</legend>
+    <p class="meta" style="margin-top:0">À l’heure d’une prise non cochée, un grand écran d’alerte s’affiche avec la liste des médicaments, et un son est joué.</p>
+    <label class="option"><input type="checkbox" data-reglage="sonRappel" ${r.sonRappel ? 'checked' : ''}> Jouer un son</label>
+    <label class="option"><input type="checkbox" data-reglage="repeterRappel" ${r.repeterRappel ? 'checked' : ''}> Répéter le son toutes les 30 secondes jusqu’à ma réponse (5 minutes au plus)</label>
+    <p class="meta">Sur iPhone, le son ne peut être joué qu’après avoir touché l’écran au moins une fois depuis l’ouverture de l’application, et il peut être coupé par le mode silencieux.</p>
+    <div class="ligne-actions"><button class="secondaire petit" data-action="test-alerte-prise">Tester l’alerte (son et écran)</button></div>
+  </fieldset>
+  ${D.lectureSeule ? '' : `<fieldset>
+    <legend>Vérifier l’alerte du calendrier</legend>
+    <p class="meta" style="margin-top:0">Crée un événement de test dans 3 minutes, avec alerte. Ajoute-le au Calendrier, verrouille ton téléphone et vérifie que l’alerte sonne. Supprime-le ensuite.</p>
+    <div class="ligne-actions"><button class="secondaire petit" data-action="ics-test">Créer l’événement de test</button></div>
+  </fieldset>`}`;
 }
 
 function blocNonValide(titre, contenu) {
@@ -2097,6 +2130,12 @@ document.addEventListener('click', ev => {
   }
   else if (a === 'ics') exporterIcs(b.dataset.quoi, b.dataset.partager === '1');
   else if (a === 'permission-notif') { Notification.requestPermission().then(() => rendre(false)); }
+  else if (a === 'test-alerte-prise') afficherAlertePrise({ test: true, heure: '', items: [] });
+  else if (a === 'alerte-pris') { basculerPrise(b.dataset.cle, true); const li = b.closest('li'); if (li) { li.classList.add('fait'); b.replaceWith(Object.assign(document.createElement('span'), { className: 'badge ok', textContent: 'Pris' })); } majAlertePrise(); }
+  else if (a === 'alerte-tout-pris') { (alerteCourante ? alerteCourante.items : []).forEach(p => { if (!lirePrises()[p.cle]) basculerPrise(p.cle, true); }); fermerAlertePrise(); annoncer('Prises cochées.'); }
+  else if (a === 'alerte-plus-tard') { reporterAlertePrise(); }
+  else if (a === 'alerte-fermer') fermerAlertePrise();
+  else if (a === 'ics-test') exporterIcsTest();
   else if (a === 'test-rappel') afficherRappel('test', 'Rappel de test', 'Voici à quoi ressemble un rappel à l’écran. Il ne s’affiche que si l’application est ouverte.');
   else if (a === 'modele') telecharger('donnees_medicales.exemple.json', JSON.stringify(JSON.parse(document.getElementById('donnees-demo').textContent), null, 2), 'application/json');
   else if (a === 'synchroniser') { synchroniser(true); }
@@ -2432,6 +2471,91 @@ function afficherRappel(cle, titre, texte, lien) {
     try { new Notification(titre, { body: texte, tag: cle }); } catch (e) { /* non disponible sur ce navigateur */ }
   }
 }
+// Alerte de prise : écran plein, son répété jusqu'à la réponse. Application ouverte uniquement.
+let alerteCourante = null, minuterieSon = null, titreAvantAlerte = '';
+let ctxAudio = null;
+function contexteAudio() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  if (!ctxAudio) { try { ctxAudio = new AC(); } catch (e) { return null; } }
+  if (ctxAudio.state === 'suspended') ctxAudio.resume().catch(() => {});
+  return ctxAudio;
+}
+// Sur iPhone, le son doit être « débloqué » par un toucher de l'utilisateur.
+document.addEventListener('pointerdown', () => { if (reglages.sonRappel) contexteAudio(); }, { passive: true });
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && alerteCourante) fermerAlertePrise(); });
+function jouerCarillon() {
+  if (navigator.vibrate) { try { navigator.vibrate([300, 150, 300]); } catch (e) { /* non disponible */ } }
+  if (!reglages.sonRappel) return;
+  const c = contexteAudio(); if (!c) return;
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* non disponible */ }
+  const t0 = c.currentTime + 0.05;
+  [[880, 0], [1175, .22], [1568, .44], [880, 1.0], [1175, 1.22], [1568, 1.44]].forEach(([f, dt]) => {
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t0 + dt); g.gain.exponentialRampToValueAtTime(0.45, t0 + dt + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + 0.5);
+    o.connect(g); g.connect(c.destination); o.start(t0 + dt); o.stop(t0 + dt + 0.55);
+  });
+}
+function afficherAlertePrise(alerte) {
+  alerteCourante = alerte;
+  const z = document.getElementById('alerte-prise');
+  const prises = lirePrises();
+  z.innerHTML = `<div class="alerte-carte">
+    <div class="alerte-icone" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"/></svg></div>
+    <h2 id="alerte-titre">${alerte.test ? 'Alerte de test' : 'C’est l’heure de ta prise'}</h2>
+    <p class="alerte-heure">${alerte.test ? 'Aucun médicament : simple essai du son et de l’écran' : `Prise prévue à ${esc(heureFr(alerte.heure))}`}</p>
+    ${alerte.items.length ? `<ul>${alerte.items.map(p => `<li class="${prises[p.cle] ? 'fait' : ''}"><span><strong>${esc(p.med.nom)}</strong>
+      <span class="meta">${typeof p.med.nom_boite === 'string' && p.med.nom_boite.trim() ? `Boîte : ${esc(p.med.nom_boite)} · ` : ''}Dose prescrite : ${esc(p.med.dose)}</span></span>
+      ${prises[p.cle] ? '<span class="badge ok">Pris</span>' : `<button class="petit" data-action="alerte-pris" data-cle="${esc(p.cle)}">Pris</button>`}</li>`).join('')}</ul>` : ''}
+    <div class="ligne-actions">
+      ${alerte.test ? '' : '<button data-action="alerte-tout-pris">Tout est pris</button><button class="secondaire" data-action="alerte-plus-tard">Rappeler dans 10 min</button>'}
+      <button class="secondaire" data-action="alerte-fermer">Fermer</button>
+    </div>
+    ${alerte.test ? '' : '<p class="meta" style="margin:10px 0 0">Doses telles qu’écrites sur l’ordonnance. Pour toute question, contacte ton équipe soignante ou ton pharmacien.</p>'}
+  </div>`;
+  z.hidden = false;
+  if (!titreAvantAlerte) titreAvantAlerte = document.title;
+  document.title = alerte.test ? '🔔 Alerte de test' : `🔔 Prise de ${heureFr(alerte.heure)}`;
+  const premier = z.querySelector('button'); if (premier) premier.focus({ preventScroll: true });
+  clearInterval(minuterieSon);
+  jouerCarillon();
+  if (reglages.repeterRappel && !alerte.test) {
+    let n = 0;
+    minuterieSon = setInterval(() => { if (++n >= 10 || !alerteCourante) { clearInterval(minuterieSon); return; } jouerCarillon(); }, 30000);
+  }
+  if (!alerte.test && reglages.notifNavigateur && 'Notification' in window && Notification.permission === 'granted') {
+    try { new Notification(`Prise prévue à ${heureFr(alerte.heure)}`, { body: alerte.items.map(p => `${p.med.nom} — ${p.med.dose}`).join('\n'), tag: alerte.cle }); } catch (e) { /* non disponible */ }
+  }
+}
+function majAlertePrise() {
+  if (!alerteCourante) return;
+  const prises = lirePrises();
+  if (alerteCourante.items.every(p => prises[p.cle])) { fermerAlertePrise(); annoncer('Toutes les prises de cette heure sont cochées.'); }
+}
+function fermerAlertePrise() {
+  clearInterval(minuterieSon); minuterieSon = null; alerteCourante = null;
+  const z = document.getElementById('alerte-prise'); z.hidden = true; z.innerHTML = '';
+  if (titreAvantAlerte) { document.title = titreAvantAlerte; titreAvantAlerte = ''; }
+  try { if (navigator.audioSession) navigator.audioSession.type = 'auto'; } catch (e) { /* non disponible */ }
+}
+function reporterAlertePrise() {
+  if (!alerteCourante) return;
+  const reports = stock.lire('rappelsReport', {});
+  reports[alerteCourante.cle] = Date.now() + 10 * 60000;
+  stock.ecrire('rappelsReport', reports);
+  fermerAlertePrise();
+  annoncer('Rappel dans 10 minutes, si l’application est ouverte.');
+}
+function exporterIcsTest() {
+  const debut = new Date(Date.now() + 3 * 60000); debut.setSeconds(0, 0);
+  const fin = new Date(debut.getTime() + 5 * 60000);
+  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Mes soins//Application locale//FR', 'METHOD:PUBLISH', 'BEGIN:VEVENT',
+    `UID:test-${Date.now()}@mes-soins.local`, `DTSTAMP:${icsUtc(new Date())}`, `DTSTART:${icsLocal(debut)}`, `DTEND:${icsLocal(fin)}`,
+    'SUMMARY:Test d’alerte — Mes soins', 'DESCRIPTION:Événement de test : vérifie que l’alerte sonne\\, puis supprime-le.', ...icsAlarme(0, 'Test d’alerte — Mes soins'), 'END:VEVENT', 'END:VCALENDAR'];
+  telecharger('mes-soins-test-alerte.ics', L.map(icsPlier).join('\r\n') + '\r\n', 'text/calendar;charset=utf-8');
+  annoncer(`Événement de test prévu à ${heureFr(`${pad(debut.getHours())}:${pad(debut.getMinutes())}`)}.`);
+}
 function verifierRappels() {
   if (!reglages.rappelsAppli) return;
   const maintenant = new Date(); const t = maintenant.getTime();
@@ -2447,13 +2571,25 @@ function verifierRappels() {
     if (debut < t) return;
     reglages.rdvDelais.forEach(m => emettre(`rdv|${r._id}|${m}`, debut - m * 60000, `Rendez-vous : ${r.titre}`, `${jourLong(r.date)} à ${heureFr(r.heure)}${r.lieu ? ' — ' + r.lieu : ''}`, '#/calendrier'));
   });
-  if (reglages.medActif && !D.lectureSeule) {
+  if (reglages.medActif && !D.lectureSeule && !alerteCourante) {
     const prises = lirePrises();
-    prisesDuJour(dateVersIso(maintenant)).forEach(p => {
-      if (prises[p.cle]) return;
-      emettre(`med|${p.cle}|${reglages.medDelai}`, dateHeure(p.date, p.heure).getTime() - reglages.medDelai * 60000,
-        `Prise prévue à ${heureFr(p.heure)}`, `${p.med.nom} — dose prescrite : ${p.med.dose}`, '#/prises');
-    });
+    const reports = stock.lire('rappelsReport', {});
+    Object.keys(reports).forEach(k => { if (t - reports[k] > 86400000) delete reports[k]; });
+    const parHeure = new Map();
+    prisesDuJour(dateVersIso(maintenant)).forEach(p => { if (!parHeure.has(p.heure)) parHeure.set(p.heure, []); parHeure.get(p.heure).push(p); });
+    for (const [heure, liste] of parHeure) {
+      const restantes = liste.filter(p => !prises[p.cle]);
+      if (!restantes.length) continue;
+      const cle = `medgrp|${liste[0].date}|${heure}|${reglages.medDelai}`;
+      const report = reports[cle];
+      const instant = report || dateHeure(liste[0].date, heure).getTime() - reglages.medDelai * 60000;
+      const cleEmis = report ? `${cle}|${report}` : cle;
+      if (emis[cleEmis] || t < instant || t - instant > fenetre) continue;
+      emis[cleEmis] = t;
+      afficherAlertePrise({ cle, heure, items: liste });
+      break;
+    }
+    stock.ecrire('rappelsReport', reports);
   }
   stock.ecrire('rappelsEmis', emis);
 }

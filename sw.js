@@ -1,7 +1,7 @@
 // Service worker : garde l'application en mémoire sur l'appareil pour qu'elle fonctionne hors connexion.
 // Il met en cache les fichiers de l'application et, pour l'hors connexion, les documents partagés
 // tels qu'ils sont publiés (chiffrés : ils ne sont déchiffrés que dans la page, avec la clé de l'abonnement).
-const CACHE = 'mes-soins-v11';
+const CACHE = 'mes-soins-v12';
 const FICHIERS = ['./', 'index.html', 'manifest.webmanifest', 'icones/icone-192.png', 'icones/icone-512.png', 'icones/apple-touch-icon.png', 'polices/plus-jakarta-sans.woff2'];
 
 self.addEventListener('install', ev => {
