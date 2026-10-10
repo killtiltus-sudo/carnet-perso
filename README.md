@@ -223,10 +223,10 @@ Onglet **Documents**. Deux sortes de documents :
     "fichiers": [ { "chemin": "documents/Xy3….bin", "nom": "bilan.pdf", "type": "application/pdf", "taille": 123456 } ] }
 ]
 ```
-Catégories : `prise_de_sang`, `compte_rendu`, `imagerie`, `ordonnance`. Pour chiffrer un fichier :
+Catégories : `prise_de_sang`, `compte_rendu`, `imagerie`, `ordonnance`, `autre` (« Autres »). Pour chiffrer un fichier :
 `MES_SOINS_CLE=… node outils/chiffrer.mjs document bilan.pdf documents/` (affiche l'entrée `fichiers` à recopier ; le nom publié est aléatoire).
 
-L'application **n'interprète pas** les résultats : elle range et affiche les documents. Les images et PDF s'affichent dans l'application ; pour les autres formats, « Ouvrir ou enregistrer » passe par le menu de partage du téléphone.
+L'application **n'interprète pas** les résultats : elle range et affiche les documents. Les images et PDF s'affichent dans l'application (toutes les pages des PDF, grâce à une copie locale de PDF.js — Mozilla, Apache-2.0 — dans `pdfjs/` ; rien n'est envoyé à l'extérieur) ; pour les autres formats, « Ouvrir ou enregistrer » passe par le menu de partage du téléphone.
 
 ## 5. Vérification automatique (facultatif)
 Si Node.js est installé : `npm i -D playwright`, puis `node outils/verifier-parcours.mjs`.

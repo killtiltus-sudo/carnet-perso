@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- Confidentialité : aucune ressource externe, aucune connexion sortante (seule la lecture du fichier local donnees_medicales.json est permise). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; frame-src blob:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; img-src 'self' data: blob:; frame-src blob:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex, nofollow">
 <meta name="color-scheme" content="light dark">
@@ -282,9 +282,14 @@ details.recette .astuce { margin-top: 10px; padding: 8px 10px; border-radius: 10
 .apercu-fichier { margin: 0 0 14px; }
 .apercu-fichier img { display: block; max-width: 100%; height: auto; border-radius: 12px; background: var(--surface-2); }
 .apercu-fichier iframe { display: block; width: 100%; height: 70vh; border: 0; border-radius: 12px; background: #fff; }
+.pages-pdf { display: flex; flex-direction: column; gap: 10px; }
+.page-pdf { position: relative; background: #fff; border-radius: 10px; box-shadow: var(--ombre); overflow: hidden; }
+.page-pdf canvas { display: block; width: 100%; height: auto; }
+.page-pdf .num-page { position: absolute; right: 8px; bottom: 8px; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,.55); color: #fff; }
 .apercu-fichier .nom-fichier { font-size: 14px; color: var(--texte-2); margin: 6px 0; overflow-wrap: anywhere; }
 .grille-cat { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; background: var(--surface-2); border-radius: 14px; padding: 4px; }
 .grille-cat label { display: flex; align-items: center; justify-content: center; text-align: center; min-height: 48px; border-radius: 11px; font-weight: 700; font-size: 15px; cursor: pointer; padding: 4px; }
+.grille-cat label:last-child:nth-child(odd) { grid-column: span 2; }
 .grille-cat input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .grille-cat label:has(input:checked) { background: var(--surface); color: var(--primaire-fort); box-shadow: var(--ombre); }
 .grille-cat label:has(input:focus-visible) { outline: 3px solid var(--focus); }
@@ -776,8 +781,8 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
 
 // ---------- Constantes ----------
 const PREFIXE = 'mesSoins.v1.';
-const CATEGORIES_DOC = { prise_de_sang: 'Prise de sang', compte_rendu: 'Compte rendu', imagerie: 'Imagerie', ordonnance: 'Ordonnance' };
-const VERSION_APP = '1.17 — 07/10/2026';
+const CATEGORIES_DOC = { prise_de_sang: 'Prise de sang', compte_rendu: 'Compte rendu', imagerie: 'Imagerie', ordonnance: 'Ordonnance', autre: 'Autres' };
+const VERSION_APP = '1.18 — 10/10/2026';
 const MESSAGE_AUCUNE_CONSIGNE = 'Aucune consigne confirmée dans les documents enregistrés. Contacte ton équipe soignante ou ton pharmacien.';
 const TYPES_RDV = {
   consultation: 'Consultation',
@@ -1589,14 +1594,73 @@ async function afficherApercuDocument() {
       const url = URL.createObjectURL(blob); urlsOuvertes.push(url);
       fichiersOuverts[i] = { blob, nom: f.nom, type: f.type };
       const apercu = f.type.startsWith('image/') ? `<img src="${url}" alt="${esc(f.nom)}">`
-        : f.type === 'application/pdf' ? `<iframe src="${url}" title="${esc(f.nom)}"></iframe>`
+        : f.type === 'application/pdf' ? `<div class="pages-pdf" data-pdf="${i}"><p class="meta">Chargement des pages…</p></div>`
         : `<div class="carte vide">Aperçu non disponible pour ce format. Utilise « Ouvrir ou enregistrer ».</div>`;
       blocs.push(`<div class="apercu-fichier">${apercu}<p class="nom-fichier">${esc(f.nom)} · ${esc(tailleLisible(blob.size))}</p>
         <div class="ligne-actions" style="margin-top:0"><button type="button" class="secondaire petit" data-action="partager-fichier" data-index="${i}">Ouvrir ou enregistrer</button></div></div>`);
     }
-    if (document.getElementById('apercu-doc') === zone) zone.innerHTML = blocs.join('');
+    if (document.getElementById('apercu-doc') !== zone) return;
+    zone.innerHTML = blocs.join('');
+    zone.querySelectorAll('.pages-pdf[data-pdf]').forEach(z => afficherPdf(z, Number(z.dataset.pdf)));
   } catch (e) {
     zone.innerHTML = `<div class="encadre danger" role="alert"><p>${esc(e.message || 'Ouverture impossible.')}</p></div>`;
+  }
+}
+// PDF.js (copie locale, Mozilla, Apache-2.0) : affiche toutes les pages, y compris sur iPhone.
+let pdfjs = null;
+async function chargerPdfjs() {
+  if (!pdfjs) {
+    const lib = await import(new URL('pdfjs/pdf.min.mjs', location.href).href);
+    lib.GlobalWorkerOptions.workerSrc = new URL('pdfjs/pdf.worker.min.mjs', location.href).href;
+    pdfjs = lib;
+  }
+  return pdfjs;
+}
+async function afficherPdf(zone, i) {
+  const f = fichiersOuverts[i]; if (!f) return;
+  try {
+    const lib = await chargerPdfjs();
+    const base = new URL('pdfjs/', location.href).href;
+    const octets = new Uint8Array(await f.blob.arrayBuffer());
+    const doc = await lib.getDocument({ data: octets, isEvalSupported: false, enableXfa: false, isImageDecoderSupported: false,
+      standardFontDataUrl: base + 'standard_fonts/', wasmUrl: base + 'wasm/', iccUrl: base + 'iccs/' }).promise;
+    const n = doc.numPages;
+    zone.innerHTML = `<p class="meta" style="margin:0">${n} page${n > 1 ? 's' : ''}</p>`;
+    const largeur = Math.max(280, zone.clientWidth || 340);
+    const ratio = Math.min(window.devicePixelRatio || 1, 2.5);
+    const pages = [];
+    for (let k = 1; k <= n; k++) {
+      const page = await doc.getPage(k);
+      const vp1 = page.getViewport({ scale: 1 });
+      const div = document.createElement('div');
+      div.className = 'page-pdf'; div.style.aspectRatio = `${vp1.width} / ${vp1.height}`;
+      div.innerHTML = `<span class="num-page">${k} / ${n}</span>`;
+      zone.appendChild(div);
+      pages.push({ page, div, vp1, fait: false });
+    }
+    // Rendu au fil du défilement, pour ménager la mémoire du téléphone.
+    const rendre1 = async p => {
+      if (p.fait) return; p.fait = true;
+      const vp = p.page.getViewport({ scale: largeur / p.vp1.width * ratio });
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.floor(vp.width); canvas.height = Math.floor(vp.height);
+      canvas.setAttribute('role', 'img'); canvas.setAttribute('aria-label', `Page ${p.page.pageNumber} sur ${n}`);
+      p.div.prepend(canvas);
+      await p.page.render({ canvasContext: canvas.getContext('2d'), canvas, viewport: vp, annotationMode: pdfjs.AnnotationMode.ENABLE }).promise; // champs de formulaire dessinés dans l'image
+      p.div.style.aspectRatio = '';
+    };
+    if ('IntersectionObserver' in window) {
+      const obs = new IntersectionObserver(entrees => entrees.forEach(e => {
+        if (!e.isIntersecting) return;
+        obs.unobserve(e.target);
+        const p = pages.find(x => x.div === e.target); if (p) rendre1(p).catch(() => {});
+      }), { rootMargin: '600px 0px' });
+      pages.forEach(p => obs.observe(p.div));
+    } else { for (const p of pages) await rendre1(p); }
+  } catch (e) {
+    // Repli : l'afficheur intégré du navigateur (sur iPhone, première page seulement).
+    const url = URL.createObjectURL(f.blob); urlsOuvertes.push(url);
+    zone.innerHTML = `<iframe src="${url}" title="${esc(f.nom)}"></iframe><p class="meta">Si toutes les pages ne s’affichent pas, utilise « Ouvrir ou enregistrer ».</p>`;
   }
 }
 async function partagerFichier(i) {

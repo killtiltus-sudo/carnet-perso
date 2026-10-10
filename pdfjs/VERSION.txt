@@ -1,0 +1,2 @@
+PDF.js 6.4.299 (pdfjs-dist, version « legacy »), Apache-2.0 — https://github.com/mozilla/pdf.js
+Copié tel quel depuis le paquet npm pdfjs-dist ; aucun appel réseau externe.
