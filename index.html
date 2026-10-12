@@ -782,7 +782,7 @@ nav.principale .badge.compte { position: absolute; top: 5px; left: 56%; }
 // ---------- Constantes ----------
 const PREFIXE = 'mesSoins.v1.';
 const CATEGORIES_DOC = { prise_de_sang: 'Prise de sang', compte_rendu: 'Compte rendu', imagerie: 'Imagerie', ordonnance: 'Ordonnance', autre: 'Autres' };
-const VERSION_APP = '1.18 — 10/10/2026';
+const VERSION_APP = '1.19 — 12/10/2026';
 const MESSAGE_AUCUNE_CONSIGNE = 'Aucune consigne confirmée dans les documents enregistrés. Contacte ton équipe soignante ou ton pharmacien.';
 const TYPES_RDV = {
   consultation: 'Consultation',
@@ -1560,26 +1560,46 @@ async function octetsFichier(x, f) {
 }
 // Photos des recettes : publiées chiffrées, déchiffrées à l'ouverture de la recette (gardées en mémoire ensuite).
 const photosRecettes = new Map();
-async function chargerPhotoRecette(det) {
+async function chargerPhotoRecette(det, force) {
   const zone = det.querySelector('.photo-recette[data-photo]');
-  if (!zone || zone.dataset.charge) return;
+  if (!zone || (zone.dataset.charge && !force)) return;
   zone.dataset.charge = '1';
   const chemin = zone.dataset.photo;
-  try {
-    let url = photosRecettes.get(chemin);
-    if (!url) {
-      const ab = stock.lire('abonnement', null);
-      if (!ab || !ab.cle || !window.crypto || !crypto.subtle) { zone.remove(); return; }
-      const rep = await fetch(chemin);
-      if (!rep.ok) throw new Error(String(rep.status));
-      url = URL.createObjectURL(new Blob([await dechiffrerOctets(await rep.json(), ab.cle)], { type: 'image/jpeg' }));
-      photosRecettes.set(chemin, url);
+  const echec = raison => {
+    zone.innerHTML = `<p class="meta" style="margin:4px 0 8px">Photo non disponible : ${esc(raison)}. <button type="button" class="secondaire petit" data-action="photo-reessayer">Réessayer</button></p>`;
+  };
+  let url = photosRecettes.get(chemin);
+  if (!url) {
+    const ab = stock.lire('abonnement', null);
+    if (!ab || !ab.cle) return echec('les photos ne s’ouvrent qu’avec les mises à jour automatiques activées (code « MS2: »)');
+    if (!window.crypto || !crypto.subtle) return echec('déchiffrement indisponible sur ce navigateur');
+    zone.innerHTML = '<p class="meta" style="margin:4px 0 8px">Chargement de la photo…</p>';
+    let env = null, raison = '';
+    for (const options of [{}, { cache: 'reload' }]) { // 2e essai : sans passer par les copies en cache
+      try {
+        const rep = await fetch(chemin, options);
+        if (!rep.ok) { raison = `fichier introuvable (erreur ${rep.status})`; continue; }
+        env = await rep.json(); break;
+      } catch (e) { raison = navigator.onLine === false ? 'pas de connexion' : 'téléchargement impossible'; }
     }
-    const img = new Image(); img.alt = zone.dataset.alt || ''; img.src = url;
-    zone.replaceChildren(img);
-  } catch (e) { zone.remove(); }
+    if (!env) return echec(raison || 'téléchargement impossible');
+    try { url = URL.createObjectURL(new Blob([await dechiffrerOctets(env, ab.cle)], { type: 'image/jpeg' })); }
+    catch (e) { return echec('déchiffrement impossible'); }
+    photosRecettes.set(chemin, url);
+  }
+  const img = new Image(); img.alt = zone.dataset.alt || '';
+  img.onerror = () => { photosRecettes.delete(chemin); echec('image illisible'); };
+  img.src = url;
+  zone.replaceChildren(img);
 }
+// Deux déclencheurs (l'événement « toggle » et le toucher du titre), au cas où l'un d'eux ne serait pas transmis.
 document.addEventListener('toggle', ev => { if (ev.target.matches && ev.target.matches('details.recette') && ev.target.open) chargerPhotoRecette(ev.target); }, true);
+document.addEventListener('click', ev => {
+  const resume = ev.target.closest && ev.target.closest('details.recette > summary');
+  if (resume) setTimeout(() => { const d = resume.parentElement; if (d.open) chargerPhotoRecette(d); }, 60);
+  const re = ev.target.closest && ev.target.closest('[data-action="photo-reessayer"]');
+  if (re) { const d = re.closest('details.recette'); if (d) { photosRecettes.delete(d.querySelector('.photo-recette').dataset.photo); chargerPhotoRecette(d, true); } }
+});
 async function afficherApercuDocument() {
   libererApercus();
   const zone = document.getElementById('apercu-doc');
